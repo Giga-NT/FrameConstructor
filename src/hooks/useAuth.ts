@@ -213,42 +213,50 @@ export const useAuth = () => {
     loadUser();
   }, []);
 
-  // Регистрация
-  const register = async (userData: any) => {
-    setIsLoading(true);
-    setError(null);
+// Регистрация
+const register = async (userData: any) => {
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      const users = browserStorage.getUsers();
-      
-      if (users.some((u: any) => u.email === userData.email)) {
-        throw new Error('Пользователь с таким email уже существует');
-      }
-
-      const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
-      
-      const newUser: User = {
-        ...userData,
-        id: Date.now().toString(),
-        projects: [],
-        orders: [],
-        isVerified: false,
-        verificationCode,
-        createdAt: new Date()
-      };
-
-      users.push(newUser);
-      browserStorage.saveUsers(users);
-      
-      console.log(`Код подтверждения для ${newUser.email}: ${verificationCode}`);
-      return newUser;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка регистрации');
-      throw err;
-    } finally {
-      setIsLoading(false);
+  try {
+    const users = browserStorage.getUsers();
+    
+    if (users.some((u: any) => u.email === userData.email)) {
+      throw new Error('Пользователь с таким email уже существует');
     }
-  };
+
+    const verificationCode = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    // ========== ПОКАЗЫВАЕМ КОД НА ЭКРАНЕ ==========
+    alert(`✅ Регистрация почти завершена!
+    
+Ваш код подтверждения: ${verificationCode}
+
+Введите этот код на следующем экране.`);
+    // ==============================================
+    
+    const newUser: User = {
+      ...userData,
+      id: Date.now().toString(),
+      projects: [],
+      orders: [],
+      isVerified: false,
+      verificationCode,
+      createdAt: new Date()
+    };
+
+    users.push(newUser);
+    browserStorage.saveUsers(users);
+    
+    console.log(`Код подтверждения для ${newUser.email}: ${verificationCode}`);
+    return newUser;
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Ошибка регистрации');
+    throw err;
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Подтверждение аккаунта
   const verifyAccount = async (email: string, code: string) => {
