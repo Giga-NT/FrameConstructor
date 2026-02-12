@@ -1,0 +1,3 @@
+@echo off
+echo Запуск программы...
+npm start

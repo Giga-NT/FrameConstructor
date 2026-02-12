@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4">Добро пожаловать в систему управления транспортом!</h1>
+            <p class="lead">Эффективное управление вашим автопарком.</p>
+            <hr class="my-4">
+
+            {% if current_user.is_authenticated %}
+                <p>Выберите одно из следующих действий:</p>
+                <div class="action-buttons">
+                    <!-- Ссылки для обычных пользователей и администраторов -->
+                    <a href="{{ url_for('transport_list') }}" class="btn btn-primary btn-action">
+                        <i class="fas fa-car"></i> Список автомобилей
+                    </a>
+                    <a href="{{ url_for('start_reis') }}" class="btn btn-success btn-action">
+                        <i class="fas fa-play"></i> Начать рейс
+                    </a>
+					<a href="{{ url_for('complete_reis', reis_id=active_reis.id) if active_reis else '#' }}" class="btn btn-primary btn-action">Завершить рейс</a>
+                    {% if current_user.is_admin %}
+                        <!-- Ссылки только для администраторов -->
+                        <a href="{{ url_for('add_transport') }}" class="btn btn-danger btn-action">
+                            <i class="fas fa-plus-circle"></i> Добавить транспорт
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p>Пожалуйста, войдите или зарегистрируйтесь:</p>
+                <div class="auth-buttons">
+                    <a href="{{ url_for('register') }}" class="btn btn-secondary btn-lg me-2">
+                        <i class="fas fa-user-plus"></i> Регистрация
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
