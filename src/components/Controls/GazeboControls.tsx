@@ -387,214 +387,203 @@ const GazeboControls: React.FC<GazeboControlsProps> = ({ params, onChange }) => 
         </InputGroup>
       </ControlSection>
 
-      {/* Мебель */}
-      <ControlSection>
-        <SectionTitle>Мебель</SectionTitle>
-        <CheckboxContainer>
-          <CheckboxItem onClick={() => onChange('hasFurniture', !params.hasFurniture)}>
-            <StyledCheckbox
-              checked={params.hasFurniture || false}
-              onChange={(e) => onChange('hasFurniture', e.target.checked)}
-            />
-            <Label>Добавить мебель</Label>
-          </CheckboxItem>
-        </CheckboxContainer>
-        {params.hasFurniture && (
-          <>
-            <InputGroup>
-              <Label>Количество скамеек</Label>
-              <Input
-                type="number"
-                value={params.benchCount}
-                onChange={(e) => onChange('benchCount', parseInt(e.target.value))}
-                min="1"
-                max="8"
-                step="1"
-              />
-            </InputGroup>
+{/* Мебель */}
+<ControlSection>
+  <SectionTitle>Мебель</SectionTitle>
+  <CheckboxContainer>
+    <CheckboxItem onClick={() => onChange('hasFurniture', !params.hasFurniture)}>
+      <StyledCheckbox
+        checked={params.hasFurniture || false}
+        onChange={(e) => onChange('hasFurniture', e.target.checked)}
+      />
+      <Label>Добавить мебель</Label>
+    </CheckboxItem>
+  </CheckboxContainer>
+  {params.hasFurniture && (
+    <>
+      <InputGroup>
+        <Label>Количество скамеек</Label>
+        <Input
+          type="number"
+          value={params.benchCount}
+          onChange={(e) => onChange('benchCount', parseInt(e.target.value))}
+          min="1"
+          max="8"
+          step="1"
+        />
+      </InputGroup>
 
-            {/* Ручные размеры скамеек */}
-            <SectionTitle style={{ fontSize: '1rem', marginTop: '16px' }}>Параметры скамеек (опционально)</SectionTitle>
-            <InputGroup>
-              <Label>Длина скамейки (м)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="0.5"
-                max={Math.max(params.width, params.length)}
-                value={params.benchLength ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                  onChange('benchLength', val);
+      {/* Ручные размеры скамеек */}
+      <SectionTitle style={{ fontSize: '1rem', marginTop: '16px' }}>Параметры скамеек (опционально)</SectionTitle>
+      <InputGroup>
+        <Label>Длина скамейки (м)</Label>
+        <Input
+          type="number"
+          step="0.1"
+          min="0.5"
+          max={Math.max(params.width, params.length)}
+          value={params.benchLength ?? ''}
+          onChange={(e) => {
+            const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+            onChange('benchLength', val);
+          }}
+          placeholder="Авто (по стене)"
+        />
+      </InputGroup>
+      <InputGroup>
+        <Label>Ширина сиденья (м)</Label>
+        <Input
+          type="number"
+          step="0.05"
+          min="0.2"
+          max="0.8"
+          value={params.benchSeatWidth ?? 0.4}
+          onChange={(e) => onChange('benchSeatWidth', parseFloat(e.target.value))}
+        />
+      </InputGroup>
+      <InputGroup>
+        <Label>Высота скамейки (м)</Label>
+        <Input
+          type="number"
+          step="0.05"
+          min="0.2"
+          max="0.8"
+          value={params.benchHeight ?? 0.45}
+          onChange={(e) => onChange('benchHeight', parseFloat(e.target.value))}
+        />
+      </InputGroup>
+
+      {/* Количество столов */}
+      <InputGroup>
+        <Label>Количество столов</Label>
+        <Input
+          type="number"
+          value={params.tableCount ?? 1}
+          onChange={(e) => onChange('tableCount', parseInt(e.target.value))}
+          min="1"
+          max="6"
+          step="1"
+        />
+      </InputGroup>
+
+      <InputGroup>
+        <Label>Ориентация стола</Label>
+        <Select
+          value={params.tableRotation ?? 0}
+          onChange={(e) => onChange('tableRotation', parseInt(e.target.value) as 0 | 90)}
+        >
+          <option value={0}>Вдоль ширины (стандартно)</option>
+          <option value={90}>Вдоль длины (повёрнутый)</option>
+        </Select>
+      </InputGroup>
+
+      {/* Размер стола */}
+      <SectionTitle style={{ fontSize: '1rem', marginTop: '16px' }}>Размер стола</SectionTitle>
+      <InputGroup>
+        <Label>Предустановка</Label>
+        <Select
+          value={params.tableSize}
+          onChange={(e) => onChange('tableSize', e.target.value)}
+        >
+          <option value="small">Маленький (0.6×0.6×0.75)</option>
+          <option value="medium">Средний (0.8×0.8×0.75)</option>
+          <option value="large">Большой (1.0×1.0×0.75)</option>
+        </Select>
+      </InputGroup>
+
+      {/* Цвета стола */}
+      <SectionTitle style={{ fontSize: '1rem', marginTop: '16px' }}>Цвета стола</SectionTitle>
+      <InputGroup>
+        <Label>Цвет столешницы</Label>
+        <ColorPickerWrapper>
+          <ColorPickerButton
+            color={params.tableTopColor || '#D2B48C'}
+            onClick={() => toggleColorPicker('tableTop')}
+          />
+          {activeColorPicker === 'tableTop' && (
+            <ColorPickerPopup>
+              <HexColorPicker
+                color={params.tableTopColor || '#D2B48C'}
+                onChange={(color) => {
+                  onChange('tableTopColor', color);
+                  setActiveColorPicker(null);
                 }}
-                placeholder="Авто (по стене)"
               />
-            </InputGroup>
-            <InputGroup>
-              <Label>Ширина сиденья (м)</Label>
-              <Input
-                type="number"
-                step="0.05"
-                min="0.2"
-                max="0.8"
-                value={params.benchSeatWidth ?? 0.4}
-                onChange={(e) => onChange('benchSeatWidth', parseFloat(e.target.value))}
-              />
-            </InputGroup>
-            <InputGroup>
-              <Label>Высота скамейки (м)</Label>
-              <Input
-                type="number"
-                step="0.05"
-                min="0.2"
-                max="0.8"
-                value={params.benchHeight ?? 0.45}
-                onChange={(e) => onChange('benchHeight', parseFloat(e.target.value))}
-              />
-            </InputGroup>
-
-			{/* Количество столов */}
-			<InputGroup>
-			  <Label>Количество столов</Label>
-			  <Input
-				type="number"
-				value={params.tableCount ?? 1}
-				onChange={(e) => onChange('tableCount', parseInt(e.target.value))}
-				min="1"
-				max="6"
-				step="1"
-			  />
-			</InputGroup>
-
-			<InputGroup>
-			  <Label>Ориентация стола</Label>
-			  <Select
-				value={params.tableRotation ?? 0}
-				onChange={(e) => onChange('tableRotation', parseInt(e.target.value) as 0 | 90)}
-			  >
-				<option value={0}>Вдоль ширины (стандартно)</option>
-				<option value={90}>Вдоль длины (повёрнутый)</option>
-			  </Select>
-			</InputGroup>
-			
-            {/* Размер стола */}
-            <SectionTitle style={{ fontSize: '1rem', marginTop: '16px' }}>Размер стола</SectionTitle>
-            <InputGroup>
-              <Label>Предустановка</Label>
-              <Select
-                value={params.tableSize}
-                onChange={(e) => onChange('tableSize', e.target.value)}
-              >
-                <option value="small">Маленький (0.6×0.6×0.75)</option>
-                <option value="medium">Средний (0.8×0.8×0.75)</option>
-                <option value="large">Большой (1.0×1.0×0.75)</option>
-              </Select>
-            </InputGroup>
-
-			{/* Цвета стола */}
-			<SectionTitle style={{ fontSize: '1rem', marginTop: '16px' }}>Цвета стола</SectionTitle>
-			<InputGroup>
-			  <Label>Цвет столешницы</Label>
-			  <ColorPickerWrapper>
-				<ColorPickerButton
-				  color={params.tableTopColor || '#D2B48C'}
-				  onClick={() => toggleColorPicker('tableTop')}
-				/>
-				{activeColorPicker === 'tableTop' && (
-				  <ColorPickerPopup>
-					<HexColorPicker
-					  color={params.tableTopColor || '#D2B48C'}
-					  onChange={(color) => {
-						onChange('tableTopColor', color);
-						setActiveColorPicker(null);
-					  }}
-					/>
-				  </ColorPickerPopup>
-				)}
-			  </ColorPickerWrapper>
-			</InputGroup>
-			<InputGroup>
-			  <Label>Цвет ножек стола</Label>
-			  <ColorPickerWrapper>
-				<ColorPickerButton
-				  color={params.tableLegsColor || '#8B4513'}
-				  onClick={() => toggleColorPicker('tableLegs')}
-				/>
-				{activeColorPicker === 'tableLegs' && (
-				  <ColorPickerPopup>
-					<HexColorPicker
-					  color={params.tableLegsColor || '#8B4513'}
-					  onChange={(color) => {
-						onChange('tableLegsColor', color);
-						setActiveColorPicker(null);
-					  }}
-					/>
-				  </ColorPickerPopup>
-				)}
-			  </ColorPickerWrapper>
-			</InputGroup>
-
-			<InputGroup>
-			  <Label>Тип стола</Label>
-			  <Select
-				value={params.tableType || 'simple'}
-				onChange={(e) => onChange('tableType', e.target.value)}
-			  >
-				<option value="simple">Простой (настраиваемый)</option>
-				<option value="model">Детальная модель</option>
-			  </Select>
-			</InputGroup>
-
-            {/* Ручные размеры стола (переопределяют предустановку) */}
-            <SectionTitle style={{ fontSize: '0.95rem', color: '#555', marginTop: '8px' }}>Ручные размеры (заполните для переопределения)</SectionTitle>
-            <InputGroup>
-              <Label>Ширина стола (м)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="0.4"
-                max={params.width}
-                value={params.tableWidth ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                  onChange('tableWidth', val);
+            </ColorPickerPopup>
+          )}
+        </ColorPickerWrapper>
+      </InputGroup>
+      <InputGroup>
+        <Label>Цвет ножек стола</Label>
+        <ColorPickerWrapper>
+          <ColorPickerButton
+            color={params.tableLegsColor || '#8B4513'}
+            onClick={() => toggleColorPicker('tableLegs')}
+          />
+          {activeColorPicker === 'tableLegs' && (
+            <ColorPickerPopup>
+              <HexColorPicker
+                color={params.tableLegsColor || '#8B4513'}
+                onChange={(color) => {
+                  onChange('tableLegsColor', color);
+                  setActiveColorPicker(null);
                 }}
-                placeholder={params.tableSize === 'small' ? '0.6' : params.tableSize === 'medium' ? '0.8' : '1.0'}
               />
-            </InputGroup>
-            <InputGroup>
-              <Label>Глубина стола (м)</Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="0.4"
-                max={params.length}
-                value={params.tableDepth ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                  onChange('tableDepth', val);
-                }}
-                placeholder={params.tableSize === 'small' ? '0.6' : params.tableSize === 'medium' ? '0.8' : '1.0'}
-              />
-            </InputGroup>
-            <InputGroup>
-              <Label>Высота стола (м)</Label>
-              <Input
-                type="number"
-                step="0.05"
-                min="0.5"
-                max="1.2"
-                value={params.tableHeight ?? ''}
-                onChange={(e) => {
-                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                  onChange('tableHeight', val);
-                }}
-                placeholder="0.75"
-              />
-            </InputGroup>
-          </>
-        )}
-      </ControlSection>
+            </ColorPickerPopup>
+          )}
+        </ColorPickerWrapper>
+      </InputGroup>
+
+      {/* Ручные размеры стола (переопределяют предустановку) */}
+      <SectionTitle style={{ fontSize: '0.95rem', color: '#555', marginTop: '8px' }}>Ручные размеры (заполните для переопределения)</SectionTitle>
+      <InputGroup>
+        <Label>Ширина стола (м)</Label>
+        <Input
+          type="number"
+          step="0.1"
+          min="0.4"
+          max={params.width}
+          value={params.tableWidth ?? ''}
+          onChange={(e) => {
+            const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+            onChange('tableWidth', val);
+          }}
+          placeholder={params.tableSize === 'small' ? '0.6' : params.tableSize === 'medium' ? '0.8' : '1.0'}
+        />
+      </InputGroup>
+      <InputGroup>
+        <Label>Глубина стола (м)</Label>
+        <Input
+          type="number"
+          step="0.1"
+          min="0.4"
+          max={params.length}
+          value={params.tableDepth ?? ''}
+          onChange={(e) => {
+            const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+            onChange('tableDepth', val);
+          }}
+          placeholder={params.tableSize === 'small' ? '0.6' : params.tableSize === 'medium' ? '0.8' : '1.0'}
+        />
+      </InputGroup>
+      <InputGroup>
+        <Label>Высота стола (м)</Label>
+        <Input
+          type="number"
+          step="0.05"
+          min="0.5"
+          max="1.2"
+          value={params.tableHeight ?? ''}
+          onChange={(e) => {
+            const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+            onChange('tableHeight', val);
+          }}
+          placeholder="0.75"
+        />
+      </InputGroup>
+    </>
+  )}
+</ControlSection>
 
       {/* Окружение */}
       <ControlSection>
