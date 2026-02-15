@@ -1,12 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Sky } from '@react-three/drei';
 import * as THREE from 'three';
 import styled from 'styled-components';
 import Modal from 'react-modal';
-import { HexColorPicker } from 'react-colorful';
-import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 import ErrorBoundary from '../ErrorBoundary';
 import { useAuth } from '../../hooks/useAuth';
 import GazeboControls from '../Controls/GazeboControls';
@@ -16,70 +14,24 @@ import SingleSlopeRoof from '../Gazebo/SingleSlopeRoof';
 import GazeboWalls from '../Gazebo/GazeboWalls';
 import GazeboFoundation from '../Gazebo/GazeboFoundation';
 import GazeboFurniture from '../Gazebo/GazeboFurniture';
+// Импортируем тип и начальные параметры из единого места
+import { GazeboParams, initialGazeboParams } from '../../types/gazeboTypes';
 
-// Типы для параметров беседки
-export type GazeboParams = {
-  width: number;
-  length: number;
-  height: number;
-  roofHeight: number;
-  roofType: 'gable' | 'arched' | 'single';
-  pillarType: 'straight' | 'curved';
-  pillarCount: number;
-  pillarSize: '100x100' | '80x80' | '60x60';
-  beamSize: '100x100' | '80x80' | '60x60';
-  railingHeight: number;
-  hasFurniture: boolean;
-  benchCount: number;
-  tableSize: 'small' | 'medium' | 'large';
-  foundationType: 'wood' | 'concrete' | 'piles' | 'none';
-  floorType: 'wood' | 'tile' | 'concrete';
-  materialType: 'wood' | 'metal' | 'combined';
-  color: string;
-  roofColor: string;
-  floorColor: string;
-  groundType: 'grass' | 'wood' | 'concrete';
-  showBackground: boolean;
-};
 
-// Начальные параметры беседки
-export const initialGazeboParams: GazeboParams = {
-  width: 3,
-  length: 3,
-  height: 2.5,
-  roofHeight: 1,
-  roofType: 'gable',
-  pillarType: 'straight',
-  pillarCount: 4,
-  pillarSize: '100x100',
-  beamSize: '80x80',
-  railingHeight: 0.9,
-  hasFurniture: true,
-  benchCount: 2,
-  tableSize: 'medium',
-  foundationType: 'wood',
-  floorType: 'wood',
-  materialType: 'wood',
-  color: '#8B4513',
-  roofColor: '#A0522D',
-  floorColor: '#D2B48C',
-  groundType: 'grass',
-  showBackground: true
-};
 
 // Цены для расчета стоимости
+interface MaterialPrices {
+  material: number;
+  work: number;
+}
+
 interface Prices {
   wood: MaterialPrices;
   metal: MaterialPrices;
-  combined: MaterialPrices; // Добавляем поддержку комбинированного материала
-  tile: {
-    material: number;
-    work: number;
-  };
-  concrete: {
-    material: number;
-    work: number;
-  };
+  combined: MaterialPrices;
+  tile: { material: number; work: number };
+  concrete: MaterialPrices;
+  none: MaterialPrices;     
   foundation: {
     wood: MaterialPrices;
     concrete: MaterialPrices;
@@ -88,11 +40,7 @@ interface Prices {
   };
   furniture: {
     bench: number;
-    table: {
-      small: number;
-      medium: number;
-      large: number;
-    };
+    table: { small: number; medium: number; large: number };
   };
   roofing: {
     shingles: number;
@@ -101,17 +49,13 @@ interface Prices {
   };
 }
 
-interface MaterialPrices {
-  material: number;
-  work: number;
-}
-
 const prices: Prices = {
   wood: { material: 1500, work: 800 },
   metal: { material: 1200, work: 600 },
-  combined: { material: 1800, work: 1000 }, 
+  combined: { material: 1800, work: 1000 },
   tile: { material: 2000, work: 1000 },
   concrete: { material: 1800, work: 700 },
+  none: { material: 0, work: 0 },  
   foundation: {
     wood: { material: 2500, work: 1200 },
     concrete: { material: 3500, work: 1500 },
@@ -120,11 +64,7 @@ const prices: Prices = {
   },
   furniture: {
     bench: 3000,
-    table: {
-      small: 5000,
-      medium: 7000,
-      large: 9000
-    }
+    table: { small: 5000, medium: 7000, large: 9000 }
   },
   roofing: {
     shingles: 800,
@@ -208,7 +148,6 @@ const useIsMobile = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -217,37 +156,32 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// Компонент Ground
+// Компонент Ground – используем useThree корректно
 const Ground = ({ groundType }: { groundType: 'grass' | 'wood' | 'concrete' }) => {
   const { scene } = useThree();
 
   useEffect(() => {
     const groundGeometry = new THREE.CircleGeometry(100, 32);
     let groundTexture: THREE.Texture;
-    
+
+    const textureLoader = new THREE.TextureLoader();
     if (groundType === 'grass') {
-      groundTexture = new THREE.TextureLoader().load(
-        'https://threejs.org/examples/textures/terrain/grasslight-big.jpg'
-      );
+      groundTexture = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
     } else if (groundType === 'wood') {
-      groundTexture = new THREE.TextureLoader().load(
-        'https://threejs.org/examples/textures/hardwood2_diffuse.jpg'
-      );
+      groundTexture = textureLoader.load('https://threejs.org/examples/textures/hardwood2_diffuse.jpg');
     } else {
-      groundTexture = new THREE.TextureLoader().load(
-        'https://threejs.org/examples/textures/brick_diffuse.jpg'
-      );
+      groundTexture = textureLoader.load('https://threejs.org/examples/textures/brick_diffuse.jpg');
     }
 
     groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
     groundTexture.repeat.set(10, 10);
-    
-    const groundMaterial = new THREE.MeshStandardMaterial({ 
+
+    const groundMaterial = new THREE.MeshStandardMaterial({
       map: groundTexture,
       roughness: 1.0,
       metalness: 0.0
     });
-    
+
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.1;
@@ -262,45 +196,40 @@ const Ground = ({ groundType }: { groundType: 'grass' | 'wood' | 'concrete' }) =
   return null;
 };
 
-// Функция для расчета стоимости беседки
+// Функция расчета стоимости беседки
 const calculateGazeboCost = (params: GazeboParams) => {
-  // Периметр беседки
   const perimeter = (params.width + params.length) * 2;
-  
-  // Площадь крыши (приблизительно)
   let roofArea = params.width * params.length;
-  if (params.roofType === 'gable') {
-    roofArea *= 1.2;
-  } else if (params.roofType === 'arched') {
-    roofArea *= 1.3;
-  }
+  if (params.roofType === 'gable') roofArea *= 1.2;
+  else if (params.roofType === 'arched') roofArea *= 1.3;
 
-  // Расчет стоимости материалов
   const frameMaterialCost = perimeter * params.height * prices[params.materialType].material;
   const roofMaterialCost = roofArea * prices.roofing[params.materialType === 'wood' ? 'shingles' : 'metal'];
-  
-  // Расчет фундамента
+
   const foundationPerimeter = perimeter;
   const foundationMaterialCost = foundationPerimeter * prices.foundation[params.foundationType].material;
   const foundationWorkCost = foundationPerimeter * prices.foundation[params.foundationType].work;
-  
-  // Расчет пола
+
   const floorArea = params.width * params.length;
   const floorMaterialCost = floorArea * prices[params.floorType].material;
   const floorWorkCost = floorArea * prices[params.floorType].work;
-  
-  // Мебель
-  const furnitureMaterialCost = 
-    params.benchCount * prices.furniture.bench + 
+
+  const furnitureMaterialCost =
+    params.benchCount * prices.furniture.bench +
     prices.furniture.table[params.tableSize];
   const furnitureWorkCost = furnitureMaterialCost * 0.3;
-  
-  // Итоговые суммы
-  const materialsCost = frameMaterialCost + roofMaterialCost + foundationMaterialCost + floorMaterialCost + furnitureMaterialCost;
-  const workCost = (perimeter * params.height * prices[params.materialType].work) + 
-                   foundationWorkCost + 
-                   floorWorkCost + 
-                   furnitureWorkCost;
+
+  const materialsCost =
+    frameMaterialCost +
+    roofMaterialCost +
+    foundationMaterialCost +
+    floorMaterialCost +
+    (params.hasFurniture ? furnitureMaterialCost : 0);
+  const workCost =
+    perimeter * params.height * prices[params.materialType].work +
+    foundationWorkCost +
+    floorWorkCost +
+    (params.hasFurniture ? furnitureWorkCost : 0);
   const totalCost = materialsCost + workCost;
 
   return {
@@ -344,15 +273,15 @@ Modal.setAppElement('#root');
 const GazeboModel: React.FC = () => {
   const isMounted = useRef(false);
   const isMobile = useIsMobile();
-  const { currentUser, saveProject, logout } = useAuth();
+  const { currentUser, saveProject, logout, getUserProjects } = useAuth();
   const navigate = useNavigate();
   const sceneRef = useRef<THREE.Scene>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const location = useLocation();
-  
+
   const searchParams = new URLSearchParams(location.search);
   const projectId = searchParams.get('project');
-  
+
   const [params, setParams] = useState<GazeboParams>(initialGazeboParams);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
@@ -360,17 +289,24 @@ const GazeboModel: React.FC = () => {
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [isTakingScreenshot, setIsTakingScreenshot] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
-  
+
   const costData = calculateGazeboCost(params);
 
+  // Загрузка проекта из БД
   useEffect(() => {
-    if (projectId && currentUser) {
-      const project = currentUser.projects?.find((p: { id: string }) => p.id === projectId);
-      if (project) {
-        setParams(project.params);
+    const loadProject = async () => {
+      if (projectId && currentUser) {
+        try {
+          const projects = await getUserProjects();
+          const project = projects.find(p => p.id === projectId);
+          if (project) setParams(project.params);
+        } catch (error) {
+          console.error('Error loading project:', error);
+        }
       }
-    }
-  }, [projectId, currentUser]);
+    };
+    loadProject();
+  }, [projectId, currentUser, getUserProjects]);
 
   useEffect(() => {
     if (!isMounted.current) {
@@ -391,12 +327,10 @@ const GazeboModel: React.FC = () => {
       navigate('/login');
       return;
     }
-
     if (!projectName.trim()) {
       alert('Пожалуйста, укажите название проекта');
       return;
     }
-
     try {
       await saveProject(projectName, params, 'gazebo');
       setProjectName('');
@@ -410,22 +344,17 @@ const GazeboModel: React.FC = () => {
 
   const handlePrint = async () => {
     setIsTakingScreenshot(true);
-
     try {
       await new Promise(resolve => requestAnimationFrame(resolve));
-      
       const canvas = canvasRef.current;
-      if (!canvas) {
-        console.error('Canvas не найден');
-        return;
-      }
+      if (!canvas) return;
 
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
       const ctx = tempCanvas.getContext('2d');
       if (!ctx) return;
-      
+
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
       ctx.drawImage(canvas, 0, 0);
@@ -458,16 +387,12 @@ const GazeboModel: React.FC = () => {
           <body>
             ${printContent}
             <script>
-              setTimeout(() => {
-                window.print();
-                window.close();
-              }, 500);
-            </script>
+              setTimeout(() => { window.print(); window.close(); }, 500);
+            <\/script>
           </body>
         </html>
       `);
       printWindow.document.close();
-
     } catch (error) {
       console.error('Ошибка:', error);
     } finally {
@@ -528,8 +453,7 @@ const GazeboModel: React.FC = () => {
             border: 'none',
             borderRadius: '6px',
             cursor: 'pointer',
-            fontSize: '15px',
-            transition: 'background 0.2s'
+            fontSize: '15px'
           }}
         >
           Отмена
@@ -545,7 +469,6 @@ const GazeboModel: React.FC = () => {
             borderRadius: '6px',
             cursor: 'pointer',
             fontSize: '15px',
-            transition: 'opacity 0.2s',
             opacity: !projectName.trim() ? 0.6 : 1
           }}
         >
@@ -555,121 +478,122 @@ const GazeboModel: React.FC = () => {
     </Modal>
   );
 
-  const PrintComponent = React.forwardRef<HTMLDivElement>((_, ref) => {
-    return (
-      <PrintContainer ref={ref}>
-        <PrintHeader>Детальный расчет стоимости беседки</PrintHeader>
-        
-        {screenshot && (
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <img 
-              src={screenshot} 
-              alt="3D модель беседки"
-              style={{ 
-                maxWidth: '100%', 
-                height: 'auto',
-                border: '1px solid #ddd',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }} 
-            />
-          </div>
-        )}
-        
-        <div>
-          <h2>Основные параметры</h2>
-          <p>Размеры: {params.width.toFixed(1)}м × {params.length.toFixed(1)}м × {params.height.toFixed(1)}м</p>
-          <p>Тип крыши: {params.roofType === 'gable' ? 'Двухскатная' : 
-                         params.roofType === 'arched' ? 'Арочная' : 'Односкатная'}</p>
-          <p>Материал: {params.materialType === 'wood' ? 'Дерево' : 
-                       params.materialType === 'metal' ? 'Металл' : 'Комбинированный'}</p>
-          <p>Фундамент: {params.foundationType === 'wood' ? 'Деревянный' : 
-                         params.foundationType === 'concrete' ? 'Бетонный' : 'Свайный'}</p>
-          <p>Пол: {params.floorType === 'wood' ? 'Деревянный' : 
-                   params.floorType === 'tile' ? 'Плитка' : 'Бетонный'}</p>
-          <p>Мебель: {params.benchCount} скамеек, стол {params.tableSize}</p>
+  const PrintComponent = forwardRef<HTMLDivElement>((_, ref) => (
+    <PrintContainer ref={ref}>
+      <PrintHeader>Детальный расчет стоимости беседки</PrintHeader>
+      {screenshot && (
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <img
+            src={screenshot}
+            alt="3D модель беседки"
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
+              border: '1px solid #ddd',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+          />
         </div>
-        
-        <PrintTable>
-          <thead>
-            <tr>
-              <PrintTableHeader>Позиция</PrintTableHeader>
-              <PrintTableHeader>Материалы</PrintTableHeader>
-              <PrintTableHeader>Работы</PrintTableHeader>
-              <PrintTableHeader>Детали</PrintTableHeader>
-            </tr>
-          </thead>
-          <tbody>
+      )}
+      <div>
+        <h2>Основные параметры</h2>
+        <p>Размеры: {params.width.toFixed(1)}м × {params.length.toFixed(1)}м × {params.height.toFixed(1)}м</p>
+        <p>Тип крыши: {
+          params.roofType === 'gable' ? 'Двухскатная' :
+          params.roofType === 'arched' ? 'Арочная' : 'Односкатная'
+        }</p>
+        <p>Материал: {
+          params.materialType === 'wood' ? 'Дерево' :
+          params.materialType === 'metal' ? 'Металл' : 'Комбинированный'
+        }</p>
+        <p>Фундамент: {
+          params.foundationType === 'wood' ? 'Деревянный' :
+          params.foundationType === 'concrete' ? 'Бетонный' : 'Свайный'
+        }</p>
+        <p>Пол: {
+          params.floorType === 'wood' ? 'Деревянный' :
+          params.floorType === 'tile' ? 'Плитка' : 'Бетонный'
+        }</p>
+        <p>Мебель: {params.benchCount} скамеек, стол {params.tableSize}</p>
+      </div>
+      <PrintTable>
+        <thead>
+          <tr>
+            <PrintTableHeader>Позиция</PrintTableHeader>
+            <PrintTableHeader>Материалы</PrintTableHeader>
+            <PrintTableHeader>Работы</PrintTableHeader>
+            <PrintTableHeader>Детали</PrintTableHeader>
+          </tr>
+        </thead>
+        <tbody>
+          <PrintTableRow>
+            <PrintTableCell>{costData.frame.name}</PrintTableCell>
+            <PrintTableCell>{Math.round(costData.frame.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
+            <PrintTableCell>-</PrintTableCell>
+            <PrintTableCell>{costData.frame.details}</PrintTableCell>
+          </PrintTableRow>
+          <PrintTableRow>
+            <PrintTableCell>{costData.roof.name}</PrintTableCell>
+            <PrintTableCell>{Math.round(costData.roof.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
+            <PrintTableCell>-</PrintTableCell>
+            <PrintTableCell>{costData.roof.details}</PrintTableCell>
+          </PrintTableRow>
+          <PrintTableRow>
+            <PrintTableCell>{costData.foundation.name}</PrintTableCell>
+            <PrintTableCell>{Math.round(costData.foundation.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
+            <PrintTableCell>{Math.round(costData.foundation.work).toLocaleString('ru-RU')} ₽</PrintTableCell>
+            <PrintTableCell>{costData.foundation.details}</PrintTableCell>
+          </PrintTableRow>
+          <PrintTableRow>
+            <PrintTableCell>{costData.floor.name}</PrintTableCell>
+            <PrintTableCell>{Math.round(costData.floor.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
+            <PrintTableCell>{Math.round(costData.floor.work).toLocaleString('ru-RU')} ₽</PrintTableCell>
+            <PrintTableCell>{costData.floor.details}</PrintTableCell>
+          </PrintTableRow>
+          {params.hasFurniture && (
             <PrintTableRow>
-              <PrintTableCell>{costData.frame.name}</PrintTableCell>
-              <PrintTableCell>{Math.round(costData.frame.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
-              <PrintTableCell>-</PrintTableCell>
-              <PrintTableCell>{costData.frame.details}</PrintTableCell>
+              <PrintTableCell>{costData.furniture.name}</PrintTableCell>
+              <PrintTableCell>{Math.round(costData.furniture.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
+              <PrintTableCell>{Math.round(costData.furniture.work).toLocaleString('ru-RU')} ₽</PrintTableCell>
+              <PrintTableCell>
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{costData.furniture.details}</pre>
+              </PrintTableCell>
             </PrintTableRow>
-            
-            <PrintTableRow>
-              <PrintTableCell>{costData.roof.name}</PrintTableCell>
-              <PrintTableCell>{Math.round(costData.roof.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
-              <PrintTableCell>-</PrintTableCell>
-              <PrintTableCell>{costData.roof.details}</PrintTableCell>
-            </PrintTableRow>
-
-            <PrintTableRow>
-              <PrintTableCell>{costData.foundation.name}</PrintTableCell>
-              <PrintTableCell>{Math.round(costData.foundation.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
-              <PrintTableCell>{Math.round(costData.foundation.work).toLocaleString('ru-RU')} ₽</PrintTableCell>
-              <PrintTableCell>{costData.foundation.details}</PrintTableCell>
-            </PrintTableRow>
-
-            <PrintTableRow>
-              <PrintTableCell>{costData.floor.name}</PrintTableCell>
-              <PrintTableCell>{Math.round(costData.floor.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
-              <PrintTableCell>{Math.round(costData.floor.work).toLocaleString('ru-RU')} ₽</PrintTableCell>
-              <PrintTableCell>{costData.floor.details}</PrintTableCell>
-            </PrintTableRow>
-
-            {params.hasFurniture && (
-              <PrintTableRow>
-                <PrintTableCell>{costData.furniture.name}</PrintTableCell>
-                <PrintTableCell>{Math.round(costData.furniture.cost).toLocaleString('ru-RU')} ₽</PrintTableCell>
-                <PrintTableCell>{Math.round(costData.furniture.work).toLocaleString('ru-RU')} ₽</PrintTableCell>
-                <PrintTableCell>
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{costData.furniture.details}</pre>
-                </PrintTableCell>
-              </PrintTableRow>
-            )}
-
-            <PrintTotalRow>
-              <PrintTableCell colSpan={2}>Итого материалы: {Math.round(
-                costData.frame.cost + 
-                costData.roof.cost + 
-                costData.foundation.cost + 
+          )}
+          <PrintTotalRow>
+            <PrintTableCell colSpan={2}>
+              Итого материалы: {Math.round(
+                costData.frame.cost +
+                costData.roof.cost +
+                costData.foundation.cost +
                 costData.floor.cost +
                 (params.hasFurniture ? costData.furniture.cost : 0)
-              ).toLocaleString('ru-RU')} ₽</PrintTableCell>
-              <PrintTableCell colSpan={2}>Итого работы: {Math.round(
-                costData.foundation.work + 
+              ).toLocaleString('ru-RU')} ₽
+            </PrintTableCell>
+            <PrintTableCell colSpan={2}>
+              Итого работы: {Math.round(
+                costData.foundation.work +
                 costData.floor.work +
                 (params.hasFurniture ? costData.furniture.work : 0)
-              ).toLocaleString('ru-RU')} ₽</PrintTableCell>
-            </PrintTotalRow>
-            <PrintTotalRow>
-              <PrintTableCell colSpan={4}>Общая стоимость: {Math.round(costData.totalCost).toLocaleString('ru-RU')} ₽</PrintTableCell>
-            </PrintTotalRow>
-          </tbody>
-        </PrintTable>
-      </PrintContainer>
-    );
-  });
+              ).toLocaleString('ru-RU')} ₽
+            </PrintTableCell>
+          </PrintTotalRow>
+          <PrintTotalRow>
+            <PrintTableCell colSpan={4}>
+              Общая стоимость: {Math.round(costData.totalCost).toLocaleString('ru-RU')} ₽
+            </PrintTableCell>
+          </PrintTotalRow>
+        </tbody>
+      </PrintTable>
+    </PrintContainer>
+  ));
 
   return (
     <Container $isMobile={isMobile}>
       <ControlsPanel $isMobile={isMobile}>
-        <GazeboControls 
-          params={params} 
-          onChange={handleParamChange}
-        />
+        <GazeboControls params={params} onChange={handleParamChange} />
       </ControlsPanel>
-      
+
       <ModelView $isMobile={isMobile}>
         <ErrorBoundary>
           <Canvas
@@ -686,28 +610,63 @@ const GazeboModel: React.FC = () => {
               near: 0.1,
               far: 1000
             }}
-            onCreated={({ scene }) => { sceneRef.current = scene }}
+            onCreated={({ scene }) => { sceneRef.current = scene; }}
           >
             <Sky distance={10000} sunPosition={[10, 20, 10]} />
             <Ground groundType={params.groundType} />
             <ambientLight intensity={0.5} />
-            <pointLight 
-              position={[params.width * 2, params.height * 3, params.length * 2]} 
+            <pointLight
+              position={[params.width * 2, params.height * 3, params.length * 2]}
               intensity={1}
               castShadow
             />
-            
-            {/* Рендеринг беседки */}
+
             <GazeboWalls params={params} />
-            
-            {params.roofType === 'gable' && <GableRoof params={params} />}
-            {params.roofType === 'arched' && <ArchedRoof params={params} />}
-            {params.roofType === 'single' && <SingleSlopeRoof params={params} />}
-            
+
+            {/* Двухскатная крыша */}
+            {params.roofType === 'gable' && (
+              <GableRoof
+                params={{
+                  width: params.width,
+                  length: params.length,
+                  height: params.height,
+                  roofHeight: params.roofHeight,
+                  roofColor: params.roofColor,
+                  color: params.color,                // ✅ добавлено
+                  materialType: params.materialType,
+                  overhang: params.overhang,          // ✅ теперь существует
+                }}
+              />
+            )}
+
+            {/* Арочная крыша */}
+            {params.roofType === 'arched' && (
+              <ArchedRoof
+                params={{
+                  ...params,
+                  frameColor: params.color,
+                  roofColor: params.roofColor
+                }}
+              />
+            )}
+
+            {/* Односкатная крыша */}
+			{params.roofType === 'single' && (
+			  <SingleSlopeRoof
+				params={{
+				  width: params.width,
+				  length: params.length,
+				  height: params.height,
+				  roofHeight: params.roofHeight,
+				  roofColor: params.roofColor,
+				  materialType: params.materialType === 'combined' ? 'wood' : params.materialType,
+				  overhang: params.overhang,
+				}}
+			  />
+			)}
             <GazeboFoundation params={params} />
-            
             {params.hasFurniture && <GazeboFurniture params={params} />}
-            
+
             <OrbitControls
               minDistance={Math.max(params.width, params.length) * 0.8}
               maxDistance={Math.max(params.width, params.length) * 3}
@@ -726,7 +685,7 @@ const GazeboModel: React.FC = () => {
           gap: '10px',
           zIndex: 100
         }}>
-          <button 
+          <button
             onClick={() => setIsCostModalOpen(true)}
             style={{
               padding: '12px 18px',
@@ -742,8 +701,7 @@ const GazeboModel: React.FC = () => {
           >
             Детальный расчет
           </button>
-          
-          <button 
+          <button
             onClick={() => setSaveModalOpen(true)}
             style={{
               padding: '12px 18px',
@@ -759,8 +717,7 @@ const GazeboModel: React.FC = () => {
           >
             Сохранить проект
           </button>
-          
-          <button 
+          <button
             onClick={() => navigate('/dashboard')}
             style={{
               padding: '12px 18px',
@@ -771,14 +728,12 @@ const GazeboModel: React.FC = () => {
               cursor: 'pointer',
               fontSize: '15px',
               fontWeight: 500,
-              boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-              marginTop: '10px'
+              boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}
           >
             В личный кабинет
           </button>
-          
-          <button 
+          <button
             onClick={() => {
               logout();
               navigate('/login');
@@ -792,8 +747,7 @@ const GazeboModel: React.FC = () => {
               cursor: 'pointer',
               fontSize: '15px',
               fontWeight: 500,
-              boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-              marginTop: '10px'
+              boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}
           >
             Выйти
@@ -831,7 +785,7 @@ const GazeboModel: React.FC = () => {
           <PrintComponent />
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-          <button 
+          <button
             onClick={handlePrint}
             style={{
               padding: '10px 20px',
@@ -845,7 +799,7 @@ const GazeboModel: React.FC = () => {
           >
             Печать
           </button>
-          <button 
+          <button
             onClick={() => setIsCostModalOpen(false)}
             style={{
               padding: '10px 20px',

@@ -1,84 +1,58 @@
-// ArchedRoof.tsx
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { GazeboParams } from '../../types/gazeboTypes';
 
-interface ArchedRoofProps {
-  params: GazeboParams;
+interface SingleSlopeRoofProps {
+  params: {
+    width: number;
+    length: number;
+    height: number;
+    roofHeight: number;
+    overhang?: number;
+    roofColor?: string;
+    materialType?: 'wood' | 'metal';
+  };
 }
 
-const ArchedRoof: React.FC<ArchedRoofProps> = ({ params }) => {
-  const { width, length, roofHeight, roofColor = '#00BFFF', materialType } = params;
+const SingleSlopeRoof: React.FC<SingleSlopeRoofProps> = ({ params }) => {
+  const {
+    width,
+    length,
+    height,
+    roofHeight,
+    overhang = 0.5,
+    roofColor = '#A0522D',
+    materialType = 'wood'
+  } = params;
 
-  // Материал крыши
   const roofMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: roofColor,
-        roughness: 0.7,
-        metalness: materialType === 'metal' ? 0.5 : 0,
-        transparent: true,
-        opacity: 0.8,
-      }),
+    () => new THREE.MeshStandardMaterial({
+      color: roofColor,
+      roughness: 0.7,
+      metalness: materialType === 'metal' ? 0.5 : 0.1,
+      side: THREE.DoubleSide,
+    }),
     [roofColor, materialType]
   );
 
-  // Создаем арочную геометрию через профиль
-  const roofGeometry = useMemo(() => {
-    const radius = (width / 2) ** 2 / (2 * roofHeight) + roofHeight / 2;
-    const yOffset = radius - roofHeight;
-
-    const arcShape = new THREE.Shape();
-    arcShape.absarc(0, 0, radius, Math.PI, 0, true); // полуокружность вниз
-    arcShape.lineTo(-width / 2, 0);
-    arcShape.lineTo(width / 2, 0);
-
-    const extrudeSettings = {
-      depth: length,
-      steps: 1,
-      bevelEnabled: false,
-    };
-
-    const geometry = new THREE.ExtrudeGeometry(arcShape, extrudeSettings);
-    geometry.translate(0, yOffset, 0); // центрируем по Y
-
-    // Разбиваем на сегменты для гладкой арки
-    const segments = 32;
-    const arcCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-width / 2, 0, 0),
-      ...Array.from({ length: segments }, (_, i) => {
-        const t = i / segments;
-        return new THREE.Vector3(
-          Math.cos(Math.PI * t) * (width / 2),
-          Math.sin(Math.PI * t) * roofHeight,
-          0
-        );
-      }),
-      new THREE.Vector3(width / 2, 0, 0),
-    ]);
-
-    const arcPoints = arcCurve.getPoints(segments + 1);
-    const arcShapeSmooth = new THREE.Shape(arcPoints.map((v) => new THREE.Vector2(v.x, v.y)));
-    const smoothExtrudeSettings = {
-      depth: length,
-      steps: 1,
-      bevelEnabled: false,
-    };
-    const smoothGeometry = new THREE.ExtrudeGeometry(arcShapeSmooth, smoothExtrudeSettings);
-    smoothGeometry.translate(0, yOffset, 0);
-
-    return smoothGeometry;
-  }, [width, length, roofHeight]);
+  const slopeLength = Math.sqrt((width + overhang * 2) ** 2 + roofHeight ** 2);
+  const angle = Math.atan2(roofHeight, width + overhang * 2);
 
   return (
-    <mesh
-      geometry={roofGeometry}
-      material={roofMaterial}
-      position={[0, params.height + roofHeight / 2, 0]} // ставим на верх стен
-      castShadow
-      receiveShadow
-    />
+    <group position={[0, height, 0]}>
+      <mesh
+        geometry={new THREE.BoxGeometry(slopeLength, 0.05, length + overhang * 2)}
+        material={roofMaterial}
+        position={[
+          (width + overhang * 2) / 2,
+          roofHeight / 2,
+          0
+        ]}
+        rotation={[0, 0, -angle]}
+        castShadow
+        receiveShadow
+      />
+    </group>
   );
 };
 
-export default React.memo(ArchedRoof);
+export default React.memo(SingleSlopeRoof);

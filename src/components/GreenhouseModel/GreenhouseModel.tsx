@@ -328,14 +328,27 @@ const GreenhouseModel: React.FC = () => {
   }, [params]);
 
   // Загрузка проекта при наличии projectId
-  useEffect(() => {
+// В начале компонента, ПОСЛЕ вызова useAuth():
+const { getUserProjects } = useAuth();
+
+useEffect(() => {
+  const loadProject = async () => {
     if (projectId && currentUser) {
-      const project = currentUser.projects?.find((p: { id: string }) => p.id === projectId);
-      if (project) {
-        setParams(project.params);
+      try {
+        // useAuth() уже вызван выше, здесь просто используем функцию
+        const projects = await getUserProjects();
+        const project = projects.find(p => p.id === projectId);
+        if (project) {
+          setParams(project.params);
+        }
+      } catch (error) {
+        console.error('Error loading project:', error);
       }
     }
-  }, [projectId, currentUser]);
+  };
+  
+  loadProject();
+}, [projectId, currentUser, getUserProjects]); // Добавьте getUserProjects в зависимости
 
   useEffect(() => {
     if (!isMounted.current) {

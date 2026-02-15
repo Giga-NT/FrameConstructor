@@ -1,3 +1,6 @@
+/* ============ OrderPage.css ============ */
+/* Исправлено: контрастность + мобильная адаптация */
+
 .order-container {
   max-width: 1200px;
   margin: 40px auto;
@@ -8,23 +11,21 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-h2,
-h3 {
-  color: #2c3e50;
+h2, h3 {
+  color: #0b1c2f;
   margin-top: 0;
   font-weight: 700;
 }
-
-h3 {
-  margin-bottom: 16px;
-}
+h2 { font-size: 28px; }
+h3 { font-size: 20px; margin-bottom: 16px; }
 
 .project-summary {
-  background: linear-gradient(to right, #eef2f3, #d0dde2);
+  background: #e9f1f6; /* однородный фон, без градиента для контраста */
   padding: 24px;
   border-radius: 12px;
   margin-bottom: 24px;
-  border-left: 6px solid #3498db;
+  border-left: 6px solid #1f6392; /* тёмный синий */
+  color: #0f293f;
 }
 
 .parameters-grid {
@@ -32,94 +33,89 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
 }
-
 .parameters-grid p {
   margin: 6px 0;
   font-size: 16px;
-  color: #34495e;
+  color: #1e3a5f; /* контрастный тёмный */
+  font-weight: 500;
 }
 
 .cost-calculation {
   margin: 30px 0;
   overflow-x: auto;
 }
-
 .cost-calculation table {
   width: 100%;
-  min-width: 600px; /* Предотвращает сжатие */
-  border-collapse: separate;
-  border-spacing: 0;
+  min-width: 600px;
+  border-collapse: collapse;
   background-color: #ffffff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
-
 .cost-calculation th,
 .cost-calculation td {
   padding: 14px 18px;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid #cbd5e1;
   text-align: left;
 }
-
 .cost-calculation th {
-  background-color: #f1f5f9;
-  font-weight: 600;
-  color: #2d3748;
-}
-
-.cost-calculation .total-row {
-  font-weight: 600;
-  background-color: #ebf4ff;
-}
-
-.cost-calculation .grand-total {
-  background-color: #e8f5e9;
+  background-color: #e6edf5;
   font-weight: 700;
+  color: #0b1c2f;
+}
+.cost-calculation td {
+  color: #1e3a5f;
+}
+.cost-calculation .total-row {
+  font-weight: 700;
+  background-color: #d4e2f0;
+  color: #0c1e2e;
+}
+.cost-calculation .grand-total {
+  background-color: #c8e6d9;
+  font-weight: 800;
   font-size: 1.15em;
-  color: #2e7d32;
+  color: #0e4d2a;
 }
 
 .order-form {
-  background: #f9fafb;
+  background: #f8fafc;
   padding: 24px;
   border-radius: 12px;
-  border: 1px solid #e4e4e4;
+  border: 1px solid #d1d9e6;
 }
-
 .form-group {
   margin-bottom: 20px;
 }
-
 .form-group label {
   display: block;
   margin-bottom: 6px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #0f293f; /* тёмный */
 }
-
 .form-group input,
 .form-group textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1px solid #ccc;
+  border: 2px solid #b0c4ce; /* более тёмная граница */
   border-radius: 8px;
   font-size: 15px;
   transition: all 0.3s ease;
+  background-color: white;
+  color: #0b1c2f;
 }
-
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: #3498db;
+  border-color: #1f6392;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 0 0 3px rgba(31, 99, 146, 0.25);
 }
-
 .form-group input:disabled,
 .form-group textarea:disabled {
-  background-color: #f1f1f1;
-  color: #999;
-  cursor: not-allowed;
+  background-color: #e9ecef;
+  color: #495057;
+  border-color: #adb5bd;
 }
 
 .form-actions {
@@ -135,38 +131,36 @@ h3 {
 .back-btn {
   padding: 12px 24px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .submit-btn {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  background: #1e6f3c; /* тёмно-зелёный */
   color: white;
 }
-
 .submit-btn:hover {
+  background: #155a2e;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
+  box-shadow: 0 6px 16px rgba(30, 111, 60, 0.35);
 }
-
 .submit-btn:disabled {
-  background: #95a5a6;
+  background: #6c8c7a;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
 .back-btn {
-  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  background: #2d3f4f; /* тёмно-серый/синий */
   color: white;
 }
-
 .back-btn:hover {
+  background: #1f2e3b;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(127, 140, 141, 0.3);
+  box-shadow: 0 6px 16px rgba(45, 63, 79, 0.35);
 }
 
 .order-success,
@@ -175,80 +169,62 @@ h3 {
   padding: 60px 20px;
   border-radius: 16px;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
   animation: fadeInUp 0.6s ease-in-out;
 }
-
 .order-success {
-  color: #2e7d32;
-  background-color: #e8f5e9;
+  color: #0e4d2a;
+  background-color: #d4edda;
 }
-
 .order-error {
-  color: #d32f2f;
-  background-color: #ffebee;
+  color: #942626;
+  background-color: #f8d7da;
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* === Адаптивность для мобильных устройств === */
-/* Равномерное распределение колонок в таблице */
-.cost-calculation th, .cost-calculation td {
-  width: 25%;
-  text-align: left;
-}
-
-/* Выравнивание для parameters-grid */
-.parameters-grid {
-  align-items: start;
-}
-
-/* Фиксированные отступы */
-.parameters-grid p {
-  margin: 8px 0;
-}
-
-/* Гибкие кнопки */
-.form-actions button {
-  flex-grow: 1;
-  min-width: 150px;
-}
-
-/* Улучшение адаптивности таблицы */
+/* === Мобильная адаптация (все устройства) === */
 @media (max-width: 768px) {
-  .cost-calculation {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  .order-container {
+    margin: 20px 12px;
+    padding: 20px 16px;
   }
-  .cost-calculation table {
-    min-width: 100%;
-  }
-}
-@media (max-width: 768px) {
+  h2 { font-size: 24px; }
+  h3 { font-size: 18px; }
   .parameters-grid {
     grid-template-columns: 1fr;
   }
-
+  .cost-calculation table {
+    min-width: 100%;
+    font-size: 14px;
+  }
+  .cost-calculation th,
+  .cost-calculation td {
+    padding: 10px 8px;
+  }
   .form-actions {
     flex-direction: column;
-    align-items: stretch;
   }
-
-  .submit-btn,
-  .back-btn {
+  .form-actions button {
     width: 100%;
   }
-
-  .cost-calculation table {
+}
+@media (max-width: 480px) {
+  .order-container {
+    padding: 16px 12px;
+  }
+  .project-summary {
+    padding: 16px;
+  }
+  .order-form {
+    padding: 16px;
+  }
+  .submit-btn,
+  .back-btn {
+    padding: 10px 16px;
     font-size: 14px;
   }
 }

@@ -500,14 +500,27 @@ const FrameModel: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const projectId = searchParams.get('project');
   
-  useEffect(() => {
+// ✅ 1. ВЫЗОВИТЕ ХУК НА ВЕРХНЕМ УРОВНЕ (в начале компонента)
+const { getUserProjects } = useAuth();
+
+useEffect(() => {
+  const loadProject = async () => {
     if (projectId && currentUser) {
-      const project = currentUser.projects?.find((p: { id: string }) => p.id === projectId);
-      if (project) {
-        setParams(project.params);
+      try {
+        // ✅ 2. ПРОСТО ИСПОЛЬЗУЙТЕ функцию, НЕ ВЫЗЫВАЙТЕ ХУК!
+        const projects = await getUserProjects();
+        const project = projects.find(p => p.id === projectId);
+        if (project) {
+          setParams(project.params);
+        }
+      } catch (error) {
+        console.error('Error loading project:', error);
       }
     }
-  }, [projectId, currentUser]);
+  };
+  
+  loadProject();
+}, [projectId, currentUser, getUserProjects]); // ✅ 3. Добавьте getUserProjects в зависимости
 
   useEffect(() => {
     if (!isMounted.current) {

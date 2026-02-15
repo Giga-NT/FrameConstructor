@@ -131,17 +131,17 @@ export const RegisterForm = () => {
         phone: formData.phone
       });
 
-      // В реальном приложении здесь будет отправка кода на email
-      // Для демо просто показываем код в интерфейсе
-      setSuccess(`Код подтверждения отправлен на ${formData.email}. Для демо: код - ${user.verificationCode}`);
-      
-      // Переходим на страницу подтверждения
-      navigate('/verify', { 
-        state: { 
-          email: formData.email,
-          verificationCode: user.verificationCode // Для демо передаем код через state
-        } 
-      });
+// Firebase отправляет письмо с ссылкой, не с кодом!
+setSuccess(`Письмо с подтверждением отправлено на ${formData.email}. 
+Проверьте почту и перейдите по ссылке.`);
+
+// Перенаправляем на страницу с сообщением
+navigate('/verify', { 
+  state: { 
+    email: formData.email,
+    message: 'Письмо с подтверждением отправлено! Проверьте почту.'
+  } 
+});
       
     } catch (err) {
       console.error('Registration error:', err);

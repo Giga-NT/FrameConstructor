@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D река — пруды и водопады</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #draw-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 620px;
+            background: rgba(30,30,30,0.96);
+            border-radius: 12px;
+            padding: 18px;
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 2px solid #4caf50;
+            z-index: 10;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+            pointer-events: all;
+        }
+        #draw-panel h3 {
+            margin: 0 0 12px 0;
+            color: #4caf50;
+            font-size: 1.3rem;
+        }
+        #canvas-container {
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            background: #111;
+            margin-bottom: 15px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            cursor: crosshair;
+            box-shadow: inset 0 0 10px #000;
+        }
+        #drawCanvas {
+            display: block;
+            background: #1a2a3a;
+            width: 100%;
+            height: auto;
+            transform-origin: 0 0;
+            transition: transform 0.1s;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        button {
+            background: #2a2a3a;
+            color: #eee;
+            border: 1px solid #555;
+            padding: 8px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 5px #000;
+        }
+        button:hover {
+            background: #4caf50;
+            border-color: #8bc34a;
+            color: #111;
+            transform: scale(1.02);
+        }
+        button.active {
+            background: #4caf50;
+            border-color: #ccff90;
+            color: black;
+            font-weight: bold;
+        }
+        .params {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 15px 0;
+            background: #1e2a2a;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        .params label {
+            font-size: 13px;
+            color: #b0bec5;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .params input {
+            width: 100%;
+            padding: 8px;
+            background: #2d3a3a;
+            border: 1px solid #4caf50;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        .param-slider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .param-slider input[type=range] {
+            flex: 1;
+            background: #2d3a3a;
+            accent-color: #4caf50;
+        }
+        .slider-value {
+            min-width: 45px;
+            text-align: right;
+            color: #4caf50;
+            font-weight: bold;
+        }
+        #build-btn {
+            background: #4caf50;
+            color: black;
+            font-weight: 900;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 40px;
+            box-shadow: 0 5px 0 #1b5e20;
+            letter-spacing: 1px;
+        }
+        #build-btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #ffd966;
+            text-align: center;
+            background: #1e2a2a;
+            padding: 10px;
+            border-radius: 30px;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #4caf50;
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: 1px solid #4caf50;
+            z-index: 15;
+            font-size: 15px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 15px black;
+            pointer-events: none;
+        }
+        #ground-toggle {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(20,20,30,0.95);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: 2px solid #4caf50;
+            z-index: 15;
+            display: flex;
+            gap: 25px;
+            backdrop-filter: blur(4px);
+            font-weight: 500;
+            box-shadow: 0 5px 20px black;
+        }
+        #ground-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        #status-bar {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #ccc;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            z-index: 20;
+            border: 1px solid #4caf50;
+        }
+        .canvas-size {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .canvas-size input {
+            width: 100%;
+            padding: 6px;
+            background: #222;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 20px;
+        }
+        #apply-size {
+            grid-column: span 2;
+            background: #4caf50;
+            color: black;
+            font-weight: bold;
+            border: none;
+            padding: 8px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        #bridge-params, #waterfall-params, #pond-params {
+            display: none;
+            margin: 15px 0;
+            padding: 15px;
+            background: #1e2a2a;
+            border-radius: 12px;
+            border-left: 6px solid #8B4513;
+        }
+        #waterfall-params {
+            border-left-color: #00aaff;
+        }
+        #pond-params {
+            border-left-color: #4caf50;
+        }
+        .param-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .param-row label {
+            font-size: 13px;
+            color: #bbb;
+        }
+        .param-row input {
+            width: 80px;
+            background: #2d3a3a;
+            border: 1px solid #4caf50;
+            color: white;
+            padding: 6px;
+            border-radius: 20px;
+        }
+        .hint {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        .selected-hint {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+        #zoom-indicator {
+            position: absolute;
+            bottom: 60px;
+            left: 10px;
+            background: rgba(0,0,0,0.5);
+            color: #4caf50;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #4caf50;
+            z-index: 25;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">✏️ Берега | ↔️ Ширина | 🌉 Мосты | 🌊 Водопад | 💧 Пруд (Shift+перетащить) | Колесико — масштаб</div>
+    <div id="status-bar">Точек: Л:0 П:0 | Режим: Левый | X:0 Y:0</div>
+    <div id="zoom-indicator">Масштаб: 1.0x</div>
+
+    <!-- Панель рисования -->
+    <div id="draw-panel">
+        <h3>🖌️ ПРОЕКТИРОВАНИЕ РЕКИ (вид сверху)</h3>
+        <div class="toolbar">
+            <button id="btn-left" class="active">🔴 Левый берег</button>
+            <button id="btn-right">🔵 Правый берег</button>
+            <button id="btn-width">↔️ Ширина</button>
+            <button id="btn-smooth">✨ Сгладить</button>
+            <button id="btn-bridge">🌉 Мост</button>
+            <button id="btn-waterfall">🌊 Водопад</button>
+            <button id="btn-pond">💧 Пруд</button>
+            <button id="btn-clear">🗑️ Очистить</button>
+        </div>
+
+        <!-- Размеры холста -->
+        <div class="canvas-size">
+            <input type="number" id="canvas-w" value="500" min="200" max="2000" step="10">
+            <input type="number" id="canvas-h" value="300" min="200" max="1200" step="10">
+            <button id="apply-size">Применить размер</button>
+        </div>
+
+        <div id="canvas-container">
+            <canvas id="drawCanvas" width="500" height="300"></canvas>
+        </div>
+
+        <div class="params">
+            <div>
+                <label>🌊 Глубина русла (0.5–5 м)</label>
+                <div class="param-slider">
+                    <input type="range" id="depthSlider" min="0.5" max="5" step="0.1" value="1.2">
+                    <span class="slider-value" id="depthVal">1.2</span>
+                </div>
+                <input type="number" id="depth" min="0.5" max="5" step="0.1" value="1.2">
+            </div>
+            <div>
+                <label>📏 Длина реки (20–500 м)</label>
+                <div class="param-slider">
+                    <input type="range" id="lengthSlider" min="20" max="500" step="5" value="120">
+                    <span class="slider-value" id="lengthVal">120</span>
+                </div>
+                <input type="number" id="length" min="20" max="500" step="5" value="120">
+            </div>
+            <div>
+                <label>⬆️ Высота истока (0–10 м)</label>
+                <div class="param-slider">
+                    <input type="range" id="hStartSlider" min="0" max="10" step="0.1" value="2.0">
+                    <span class="slider-value" id="hStartVal">2.0</span>
+                </div>
+                <input type="number" id="height-start" min="0" max="10" step="0.1" value="2.0">
+            </div>
+            <div>
+                <label>⬇️ Высота устья (0–10 м)</label>
+                <div class="param-slider">
+                    <input type="range" id="hEndSlider" min="0" max="10" step="0.1" value="0.5">
+                    <span class="slider-value" id="hEndVal">0.5</span>
+                </div>
+                <input type="number" id="height-end" min="0" max="10" step="0.1" value="0.5">
+            </div>
+        </div>
+
+        <!-- Параметры моста -->
+        <div id="bridge-params">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#4caf50;">✏️ Параметры моста</span>
+                <span id="selected-bridge-id" class="selected-hint">(не выбран)</span>
+            </div>
+            <div class="param-row">
+                <label>Длина (м)</label>
+                <input type="number" id="bridge-length" min="5" max="50" value="20" step="1">
+                <label>Ширина (м)</label>
+                <input type="number" id="bridge-width" min="3" max="30" value="10" step="0.5">
+                <label>Поворот (°)</label>
+                <input type="number" id="bridge-rot" min="0" max="360" value="0" step="1">
+            </div>
+            <div class="hint">➡️ Выберите мост кликом, затем меняйте параметры.</div>
+        </div>
+
+        <!-- Параметры водопада -->
+        <div id="waterfall-params">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#00aaff;">✏️ Зона водопада</span>
+                <span id="selected-waterfall-id" class="selected-hint">(не выбрана)</span>
+            </div>
+            <div class="param-row">
+                <label>Перепад (м)</label>
+                <input type="number" id="waterfall-height" min="0.5" max="10" value="3.0" step="0.5">
+            </div>
+            <div class="hint">➡️ Зажмите Shift и перетащите, чтобы создать зону. Двойной клик по зоне — удалить.</div>
+        </div>
+
+        <!-- Параметры пруда -->
+        <div id="pond-params">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="color:#4caf50;">✏️ Параметры пруда</span>
+                <span id="selected-pond-id" class="selected-hint">(не выбран)</span>
+            </div>
+            <div class="param-row">
+                <label>Длина (м)</label>
+                <input type="number" id="pond-length" min="5" max="100" value="20" step="1">
+                <label>Ширина (м)</label>
+                <input type="number" id="pond-width" min="5" max="100" value="20" step="1">
+            </div>
+            <div class="hint">➡️ Зажмите Shift и перетащите, чтобы создать пруд. Двойной клик по зоне — удалить.</div>
+        </div>
+
+        <button id="build-btn">🏞️ ПОСТРОИТЬ 3D РЕКУ</button>
+        <div id="status">Готов к рисованию</div>
+    </div>
+
+    <!-- Переключатель грунта -->
+    <div id="ground-toggle">
+        <label><input type="radio" name="ground" value="grass" checked> 🌿 Трава</label>
+        <label><input type="radio" name="ground" value="snow"> ❄️ Снег</label>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Элементы ---
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+        const statusBar = document.getElementById('status-bar');
+        const zoomIndicator = document.getElementById('zoom-indicator');
+        
+        // Масштабирование
+        let zoom = 1.0;
+        const ZOOM_STEP = 0.2;
+        const ZOOM_MIN = 0.2;
+        const ZOOM_MAX = 5.0;
+
+        // Состояние
+        let drawing = false;
+        let currentSide = 'left';
+        let leftPoints = [];
+        let rightPoints = [];
+        let currentTool = 'draw'; // 'draw', 'bridge', 'width', 'waterfall', 'pond'
+        let bridges = []; // { x, y, length, width, rotation }
+        let waterfalls = []; // { x1, y1, x2, y2, height } в мировых координатах
+        let ponds = []; // { x1, y1, x2, y2 } для прямоугольной зоны, в 3D превращаем в овал
+        
+        // Для выбора и перетаскивания объектов
+        let selectedBridgeIndex = -1;
+        let draggedBridgeIndex = -1;
+        let dragStartWorld = { x: 0, y: 0 };
+        let dragStartMouse = { x: 0, y: 0 };
+        
+        let selectedWaterfallIndex = -1;
+        let draggedWaterfallIndex = -1;
+        let dragStartWaterfallWorld = { x: 0, y: 0 };
+        
+        let selectedPondIndex = -1;
+        let draggedPondIndex = -1;
+        let dragStartPondWorld = { x: 0, y: 0 };
+        
+        // Для редактирования ширины (перетаскивание точек берега)
+        let draggedPointIndex = -1;
+        let dragPointOriginal = { x: 0, y: 0 };
+        
+        // Для создания зоны перетаскиванием
+        let dragStart = null; // { x, y } в пикселях canvas
+        let dragEnd = null;
+
+        // Параметры
+        let depth = 1.2;
+        let totalLength = 120;
+        let hStart = 2.0;
+        let hEnd = 0.5;
+        
+        // Синхронизация слайдеров
+        function setupSlider(sliderId, inputId, valId, setVar) {
+            const slider = document.getElementById(sliderId);
+            const input = document.getElementById(inputId);
+            const valSpan = document.getElementById(valId);
+            const update = () => {
+                const v = parseFloat(input.value);
+                slider.value = v;
+                valSpan.innerText = v.toFixed(1);
+                setVar(v);
+            };
+            slider.addEventListener('input', () => {
+                input.value = slider.value;
+                update();
+            });
+            input.addEventListener('change', update);
+            input.addEventListener('input', () => {
+                valSpan.innerText = parseFloat(input.value).toFixed(1);
+            });
+            update();
+        }
+        setupSlider('depthSlider', 'depth', 'depthVal', (v) => depth = v);
+        setupSlider('lengthSlider', 'length', 'lengthVal', (v) => totalLength = v);
+        setupSlider('hStartSlider', 'height-start', 'hStartVal', (v) => hStart = v);
+        setupSlider('hEndSlider', 'height-end', 'hEndVal', (v) => hEnd = v);
+
+        // --- Масштабирование колесиком ---
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const oldZoom = zoom;
+            if (e.deltaY < 0) {
+                zoom = Math.min(ZOOM_MAX, zoom + ZOOM_STEP);
+            } else {
+                zoom = Math.max(ZOOM_MIN, zoom - ZOOM_STEP);
+            }
+            
+            canvas.style.transform = `scale(${zoom})`;
+            zoomIndicator.innerText = `Масштаб: ${zoom.toFixed(1)}x`;
+        });
+
+        // --- Корректное получение координат мыши на canvas с учётом масштаба ---
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            return { x: Math.min(canvas.width-1, Math.max(0, x)), y: Math.min(canvas.height-1, Math.max(0, y)) };
+        }
+
+        // --- Рисование 2D ---
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Сетка
+            ctx.strokeStyle = '#335577';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= canvas.width; i += 25) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i <= canvas.height; i += 25) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            // Левый берег
+            if (leftPoints.length > 1) {
+                ctx.strokeStyle = '#ff5555';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(leftPoints[0].x, leftPoints[0].y);
+                for (let i = 1; i < leftPoints.length; i++) ctx.lineTo(leftPoints[i].x, leftPoints[i].y);
+                ctx.stroke();
+                ctx.fillStyle = '#ff5555';
+                leftPoints.forEach((p, idx) => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, idx === draggedPointIndex && currentSide==='left' ? 5 : 3, 0, 2*Math.PI);
+                    ctx.fill();
+                });
+            }
+            
+            // Правый берег
+            if (rightPoints.length > 1) {
+                ctx.strokeStyle = '#5555ff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(rightPoints[0].x, rightPoints[0].y);
+                for (let i = 1; i < rightPoints.length; i++) ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
+                ctx.stroke();
+                ctx.fillStyle = '#5555ff';
+                rightPoints.forEach((p, idx) => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, idx === draggedPointIndex && currentSide==='right' ? 5 : 3, 0, 2*Math.PI);
+                    ctx.fill();
+                });
+            }
+            
+            // Мосты
+            bridges.forEach((b, idx) => {
+                const scale = getScale();
+                const screenX = canvas.width/2 + b.x / scale;
+                const screenY = canvas.height/2 + b.y / scale;
+                const w = b.length / scale;
+                const h = b.width / scale;
+                ctx.save();
+                ctx.translate(screenX, screenY);
+                ctx.rotate(b.rotation * Math.PI/180);
+                if (idx === selectedBridgeIndex || idx === draggedBridgeIndex) {
+                    ctx.strokeStyle = '#ffaa00';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(-w/2-2, -h/2-2, w+4, h+4);
+                }
+                ctx.fillStyle = 'rgba(139,69,19,0.7)';
+                ctx.fillRect(-w/2, -h/2, w, h);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-w/2, -h/2, w, h);
+                ctx.restore();
+            });
+
+            // Зоны водопада
+            waterfalls.forEach((wf, idx) => {
+                const scale = getScale();
+                const x1 = canvas.width/2 + wf.x1 / scale;
+                const y1 = canvas.height/2 + wf.y1 / scale;
+                const x2 = canvas.width/2 + wf.x2 / scale;
+                const y2 = canvas.height/2 + wf.y2 / scale;
+                ctx.save();
+                ctx.strokeStyle = '#00aaff';
+                ctx.lineWidth = idx === selectedWaterfallIndex ? 4 : 2;
+                ctx.setLineDash([5, 3]);
+                ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+                ctx.fillStyle = 'rgba(0,170,255,0.15)';
+                ctx.fillRect(x1, y1, x2-x1, y2-y1);
+                ctx.restore();
+                ctx.fillStyle = '#00aaff';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText(`↯ ${wf.height}м`, x1+5, y1+20);
+            });
+
+            // Зоны прудов
+            ponds.forEach((p, idx) => {
+                const scale = getScale();
+                const x1 = canvas.width/2 + p.x1 / scale;
+                const y1 = canvas.height/2 + p.y1 / scale;
+                const x2 = canvas.width/2 + p.x2 / scale;
+                const y2 = canvas.height/2 + p.y2 / scale;
+                ctx.save();
+                ctx.strokeStyle = '#4caf50';
+                ctx.lineWidth = idx === selectedPondIndex ? 4 : 2;
+                ctx.setLineDash([5, 3]);
+                ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+                ctx.fillStyle = 'rgba(76,175,80,0.1)';
+                ctx.fillRect(x1, y1, x2-x1, y2-y1);
+                ctx.restore();
+                ctx.fillStyle = '#4caf50';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText(`💧 пруд`, x1+5, y1+20);
+            });
+            
+            // Подписи
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#ff5555';
+            ctx.fillText('Левый', 10, 30);
+            ctx.fillStyle = '#5555ff';
+            ctx.fillText('Правый', 10, 60);
+        }
+
+        // --- Преобразования координат ---
+        function getScale() {
+            return totalLength / (canvas.width * 0.8);
+        }
+
+        function canvasToWorld(x, y) {
+            const scale = getScale();
+            return { x: (x - canvas.width/2) * scale, y: (y - canvas.height/2) * scale };
+        }
+
+        function worldToCanvas(wx, wy) {
+            const scale = getScale();
+            return { x: canvas.width/2 + wx / scale, y: canvas.height/2 + wy / scale };
+        }
+
+        // Проверка попадания в точку берега (для инструмента "Ширина")
+        function getNearestPointIndex(points, x, y, threshold = 10) {
+            let minDist = Infinity;
+            let idx = -1;
+            for (let i = 0; i < points.length; i++) {
+                const d = Math.hypot(points[i].x - x, points[i].y - y);
+                if (d < threshold && d < minDist) {
+                    minDist = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        // Проверка попадания в повёрнутый прямоугольник (мост)
+        function pointInRotatedRect(px, py, cx, cy, w, h, angleDeg) {
+            const rad = angleDeg * Math.PI / 180;
+            const dx = px - cx;
+            const dy = py - cy;
+            const cos = Math.cos(-rad);
+            const sin = Math.sin(-rad);
+            const localX = dx * cos - dy * sin;
+            const localY = dx * sin + dy * cos;
+            return Math.abs(localX) <= w/2 && Math.abs(localY) <= h/2;
+        }
+
+        // Проверка попадания в зону водопада (прямоугольник)
+        function pointInWaterfall(px, py, wf) {
+            const scale = getScale();
+            const x1 = canvas.width/2 + wf.x1 / scale;
+            const y1 = canvas.height/2 + wf.y1 / scale;
+            const x2 = canvas.width/2 + wf.x2 / scale;
+            const y2 = canvas.height/2 + wf.y2 / scale;
+            return px >= Math.min(x1,x2) && px <= Math.max(x1,x2) && py >= Math.min(y1,y2) && py <= Math.max(y1,y2);
+        }
+
+        // Проверка попадания в зону пруда
+        function pointInPond(px, py, pond) {
+            const scale = getScale();
+            const x1 = canvas.width/2 + pond.x1 / scale;
+            const y1 = canvas.height/2 + pond.y1 / scale;
+            const x2 = canvas.width/2 + pond.x2 / scale;
+            const y2 = canvas.height/2 + pond.y2 / scale;
+            return px >= Math.min(x1,x2) && px <= Math.max(x1,x2) && py >= Math.min(y1,y2) && py <= Math.max(y1,y2);
+        }
+
+        // Интерполяция по длине дуги
+        function resampleCurve(points, numSamples) {
+            if (points.length < 2) return points.slice();
+            const dist = [0];
+            for (let i = 1; i < points.length; i++) {
+                const dx = points[i].x - points[i-1].x;
+                const dy = points[i].y - points[i-1].y;
+                dist.push(dist[i-1] + Math.hypot(dx, dy));
+            }
+            const total = dist[dist.length-1];
+            if (total < 1e-6) return Array(numSamples).fill(points[0]);
+            
+            const sampled = [];
+            for (let k = 0; k < numSamples; k++) {
+                const target = (k / (numSamples-1)) * total;
+                let idx = 0;
+                while (idx < dist.length-1 && dist[idx+1] < target) idx++;
+                if (idx === dist.length-1) sampled.push({ ...points[points.length-1] });
+                else {
+                    const t = (target - dist[idx]) / (dist[idx+1] - dist[idx]);
+                    const p1 = points[idx];
+                    const p2 = points[idx+1];
+                    sampled.push({ x: p1.x + t*(p2.x-p1.x), y: p1.y + t*(p2.y-p1.y) });
+                }
+            }
+            return sampled;
+        }
+
+        // Обновление полей объектов
+        function updateBridgeUIFromSelected() {
+            if (selectedBridgeIndex >= 0 && selectedBridgeIndex < bridges.length) {
+                const b = bridges[selectedBridgeIndex];
+                document.getElementById('bridge-length').value = b.length;
+                document.getElementById('bridge-width').value = b.width;
+                document.getElementById('bridge-rot').value = b.rotation;
+                document.getElementById('selected-bridge-id').innerText = `мост #${selectedBridgeIndex+1}`;
+            } else {
+                document.getElementById('selected-bridge-id').innerText = '(не выбран)';
+            }
+        }
+
+        function updateWaterfallUIFromSelected() {
+            if (selectedWaterfallIndex >= 0 && selectedWaterfallIndex < waterfalls.length) {
+                const wf = waterfalls[selectedWaterfallIndex];
+                document.getElementById('waterfall-height').value = wf.height;
+                document.getElementById('selected-waterfall-id').innerText = `зона #${selectedWaterfallIndex+1}`;
+            } else {
+                document.getElementById('selected-waterfall-id').innerText = '(не выбрана)';
+            }
+        }
+
+        function updatePondUIFromSelected() {
+            if (selectedPondIndex >= 0 && selectedPondIndex < ponds.length) {
+                const p = ponds[selectedPondIndex];
+                // Длина и ширина пруда в мировых координатах
+                const length = Math.abs(p.x2 - p.x1);
+                const width = Math.abs(p.y2 - p.y1);
+                document.getElementById('pond-length').value = length.toFixed(1);
+                document.getElementById('pond-width').value = width.toFixed(1);
+                document.getElementById('selected-pond-id').innerText = `пруд #${selectedPondIndex+1}`;
+            } else {
+                document.getElementById('selected-pond-id').innerText = '(не выбран)';
+            }
+        }
+
+        // Обработчики полей
+        function setupBridgeInputs() {
+            const lengthInput = document.getElementById('bridge-length');
+            const widthInput = document.getElementById('bridge-width');
+            const rotInput = document.getElementById('bridge-rot');
+            
+            function updateSelectedBridge() {
+                if (selectedBridgeIndex >= 0 && selectedBridgeIndex < bridges.length) {
+                    const b = bridges[selectedBridgeIndex];
+                    b.length = parseFloat(lengthInput.value);
+                    b.width = parseFloat(widthInput.value);
+                    b.rotation = parseFloat(rotInput.value);
+                    redrawCanvas();
+                }
+            }
+            
+            lengthInput.addEventListener('input', updateSelectedBridge);
+            widthInput.addEventListener('input', updateSelectedBridge);
+            rotInput.addEventListener('input', updateSelectedBridge);
+        }
+        setupBridgeInputs();
+
+        function setupWaterfallInputs() {
+            const heightInput = document.getElementById('waterfall-height');
+            heightInput.addEventListener('input', () => {
+                if (selectedWaterfallIndex >= 0 && selectedWaterfallIndex < waterfalls.length) {
+                    waterfalls[selectedWaterfallIndex].height = parseFloat(heightInput.value);
+                    redrawCanvas();
+                }
+            });
+        }
+        setupWaterfallInputs();
+
+        function setupPondInputs() {
+            const lengthInput = document.getElementById('pond-length');
+            const widthInput = document.getElementById('pond-width');
+            
+            function updateSelectedPond() {
+                if (selectedPondIndex >= 0 && selectedPondIndex < ponds.length) {
+                    const p = ponds[selectedPondIndex];
+                    const centerX = (p.x1 + p.x2) / 2;
+                    const centerY = (p.y1 + p.y2) / 2;
+                    p.x1 = centerX - parseFloat(lengthInput.value) / 2;
+                    p.x2 = centerX + parseFloat(lengthInput.value) / 2;
+                    p.y1 = centerY - parseFloat(widthInput.value) / 2;
+                    p.y2 = centerY + parseFloat(widthInput.value) / 2;
+                    redrawCanvas();
+                }
+            }
+            
+            lengthInput.addEventListener('input', updateSelectedPond);
+            widthInput.addEventListener('input', updateSelectedPond);
+        }
+        setupPondInputs();
+
+        // --- Обработчики мыши ---
+        canvas.addEventListener('mousedown', (e) => {
+            const { x, y } = getCanvasCoords(e);
+            
+            if (currentTool === 'draw') {
+                drawing = true;
+                if (currentSide === 'left') leftPoints.push({x, y});
+                else rightPoints.push({x, y});
+                redrawCanvas();
+            }
+            else if (currentTool === 'width') {
+                // Поиск точки на берегу
+                let side = null;
+                let idx = getNearestPointIndex(leftPoints, x, y);
+                if (idx !== -1) {
+                    side = 'left';
+                } else {
+                    idx = getNearestPointIndex(rightPoints, x, y);
+                    if (idx !== -1) side = 'right';
+                }
+                if (side !== null) {
+                    currentSide = side;
+                    draggedPointIndex = idx;
+                    dragPointOriginal = { x: (side==='left' ? leftPoints[idx].x : rightPoints[idx].x), y: (side==='left' ? leftPoints[idx].y : rightPoints[idx].y) };
+                    drawing = true;
+                }
+            }
+            else if (currentTool === 'bridge') {
+                // Проверка на попадание в мост
+                const scale = getScale();
+                let hitIndex = -1;
+                for (let i = bridges.length - 1; i >= 0; i--) {
+                    const b = bridges[i];
+                    const cx = canvas.width/2 + b.x / scale;
+                    const cy = canvas.height/2 + b.y / scale;
+                    const w = b.length / scale;
+                    const h = b.width / scale;
+                    if (pointInRotatedRect(x, y, cx, cy, w, h, b.rotation)) {
+                        hitIndex = i;
+                        break;
+                    }
+                }
+                if (hitIndex !== -1) {
+                    selectedBridgeIndex = hitIndex;
+                    draggedBridgeIndex = hitIndex;
+                    dragStartMouse = { x, y };
+                    dragStartWorld = { x: bridges[hitIndex].x, y: bridges[hitIndex].y };
+                    updateBridgeUIFromSelected();
+                    e.preventDefault();
+                } else {
+                    selectedBridgeIndex = -1;
+                    updateBridgeUIFromSelected();
+                    const world = canvasToWorld(x, y);
+                    bridges.push({
+                        x: world.x,
+                        y: world.y,
+                        length: parseFloat(document.getElementById('bridge-length').value),
+                        width: parseFloat(document.getElementById('bridge-width').value),
+                        rotation: parseFloat(document.getElementById('bridge-rot').value)
+                    });
+                    selectedBridgeIndex = bridges.length - 1;
+                    updateBridgeUIFromSelected();
+                    redrawCanvas();
+                }
+            }
+            else if (currentTool === 'waterfall') {
+                // Если зажат Shift, начинаем рисование прямоугольника
+                if (e.shiftKey) {
+                    dragStart = { x, y };
+                } else {
+                    // Попытка выделить существующую зону
+                    let hitIndex = -1;
+                    for (let i = waterfalls.length - 1; i >= 0; i--) {
+                        if (pointInWaterfall(x, y, waterfalls[i])) {
+                            hitIndex = i;
+                            break;
+                        }
+                    }
+                    if (hitIndex !== -1) {
+                        selectedWaterfallIndex = hitIndex;
+                        updateWaterfallUIFromSelected();
+                        redrawCanvas();
+                    } else {
+                        selectedWaterfallIndex = -1;
+                        updateWaterfallUIFromSelected();
+                    }
+                }
+            }
+            else if (currentTool === 'pond') {
+                if (e.shiftKey) {
+                    dragStart = { x, y };
+                } else {
+                    let hitIndex = -1;
+                    for (let i = ponds.length - 1; i >= 0; i--) {
+                        if (pointInPond(x, y, ponds[i])) {
+                            hitIndex = i;
+                            break;
+                        }
+                    }
+                    if (hitIndex !== -1) {
+                        selectedPondIndex = hitIndex;
+                        updatePondUIFromSelected();
+                        redrawCanvas();
+                    } else {
+                        selectedPondIndex = -1;
+                        updatePondUIFromSelected();
+                    }
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const { x, y } = getCanvasCoords(e);
+            const world = canvasToWorld(x, y);
+            statusBar.innerHTML = `Точек: Л:${leftPoints.length} П:${rightPoints.length} | Режим: ${currentTool} | X:${world.x.toFixed(1)} Y:${world.y.toFixed(1)}`;
+            
+            // Перетаскивание моста
+            if (draggedBridgeIndex !== -1) {
+                const scale = getScale();
+                const dx = x - dragStartMouse.x;
+                const dy = y - dragStartMouse.y;
+                const dwx = dx * scale;
+                const dwy = dy * scale;
+                bridges[draggedBridgeIndex].x = dragStartWorld.x + dwx;
+                bridges[draggedBridgeIndex].y = dragStartWorld.y + dwy;
+                redrawCanvas();
+                return;
+            }
+            
+            // Перетаскивание точки берега
+            if (draggedPointIndex !== -1 && currentTool === 'width') {
+                if (currentSide === 'left' && leftPoints[draggedPointIndex]) {
+                    leftPoints[draggedPointIndex] = { x, y };
+                } else if (currentSide === 'right' && rightPoints[draggedPointIndex]) {
+                    rightPoints[draggedPointIndex] = { x, y };
+                }
+                redrawCanvas();
+                return;
+            }
+            
+            // Рисование зоны (водопад или пруд)
+            if ((currentTool === 'waterfall' || currentTool === 'pond') && dragStart) {
+                dragEnd = { x, y };
+                redrawCanvas();
+                // Нарисуем предварительный прямоугольник
+                ctx.save();
+                ctx.strokeStyle = currentTool === 'waterfall' ? '#00aaff' : '#4caf50';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 3]);
+                ctx.strokeRect(dragStart.x, dragStart.y, x - dragStart.x, y - dragStart.y);
+                ctx.restore();
+            }
+            
+            if (!drawing) return;
+            if (currentTool !== 'draw') return;
+            
+            const last = currentSide === 'left' ? leftPoints[leftPoints.length-1] : rightPoints[rightPoints.length-1];
+            if (last && Math.hypot(x - last.x, y - last.y) < 8) return;
+            
+            if (currentSide === 'left') leftPoints.push({x, y});
+            else rightPoints.push({x, y});
+            redrawCanvas();
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if ((currentTool === 'waterfall' || currentTool === 'pond') && dragStart) {
+                const { x, y } = getCanvasCoords(e);
+                if (dragStart && (Math.abs(x - dragStart.x) > 5 || Math.abs(y - dragStart.y) > 5)) {
+                    const p1 = canvasToWorld(dragStart.x, dragStart.y);
+                    const p2 = canvasToWorld(x, y);
+                    if (currentTool === 'waterfall') {
+                        waterfalls.push({
+                            x1: p1.x,
+                            y1: p1.y,
+                            x2: p2.x,
+                            y2: p2.y,
+                            height: parseFloat(document.getElementById('waterfall-height').value)
+                        });
+                    } else if (currentTool === 'pond') {
+                        ponds.push({
+                            x1: p1.x,
+                            y1: p1.y,
+                            x2: p2.x,
+                            y2: p2.y
+                        });
+                    }
+                }
+                dragStart = null;
+                dragEnd = null;
+                redrawCanvas();
+            }
+            drawing = false;
+            draggedBridgeIndex = -1;
+            draggedPointIndex = -1;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            drawing = false;
+            draggedBridgeIndex = -1;
+            draggedPointIndex = -1;
+            dragStart = null;
+            dragEnd = null;
+        });
+
+        // Двойной клик для удаления
+        canvas.addEventListener('dblclick', (e) => {
+            const { x, y } = getCanvasCoords(e);
+            if (currentTool === 'bridge') {
+                const scale = getScale();
+                for (let i = bridges.length - 1; i >= 0; i--) {
+                    const b = bridges[i];
+                    const cx = canvas.width/2 + b.x / scale;
+                    const cy = canvas.height/2 + b.y / scale;
+                    const w = b.length / scale;
+                    const h = b.width / scale;
+                    if (pointInRotatedRect(x, y, cx, cy, w, h, b.rotation)) {
+                        bridges.splice(i, 1);
+                        if (selectedBridgeIndex === i) {
+                            selectedBridgeIndex = -1;
+                            updateBridgeUIFromSelected();
+                        } else if (selectedBridgeIndex > i) {
+                            selectedBridgeIndex--;
+                        }
+                        redrawCanvas();
+                        break;
+                    }
+                }
+            } else if (currentTool === 'waterfall') {
+                for (let i = waterfalls.length - 1; i >= 0; i--) {
+                    if (pointInWaterfall(x, y, waterfalls[i])) {
+                        waterfalls.splice(i, 1);
+                        if (selectedWaterfallIndex === i) {
+                            selectedWaterfallIndex = -1;
+                            updateWaterfallUIFromSelected();
+                        } else if (selectedWaterfallIndex > i) {
+                            selectedWaterfallIndex--;
+                        }
+                        redrawCanvas();
+                        break;
+                    }
+                }
+            } else if (currentTool === 'pond') {
+                for (let i = ponds.length - 1; i >= 0; i--) {
+                    if (pointInPond(x, y, ponds[i])) {
+                        ponds.splice(i, 1);
+                        if (selectedPondIndex === i) {
+                            selectedPondIndex = -1;
+                            updatePondUIFromSelected();
+                        } else if (selectedPondIndex > i) {
+                            selectedPondIndex--;
+                        }
+                        redrawCanvas();
+                        break;
+                    }
+                }
+            }
+        });
+
+        // --- Кнопки ---
+        document.getElementById('btn-left').addEventListener('click', () => {
+            currentSide = 'left';
+            currentTool = 'draw';
+            setActive('btn-left');
+            hideAllParams();
+        });
+        document.getElementById('btn-right').addEventListener('click', () => {
+            currentSide = 'right';
+            currentTool = 'draw';
+            setActive('btn-right');
+            hideAllParams();
+        });
+        document.getElementById('btn-width').addEventListener('click', () => {
+            currentTool = 'width';
+            setActive('btn-width');
+            hideAllParams();
+        });
+        document.getElementById('btn-bridge').addEventListener('click', () => {
+            currentTool = 'bridge';
+            setActive('btn-bridge');
+            hideAllParams();
+            document.getElementById('bridge-params').style.display = 'block';
+        });
+        document.getElementById('btn-waterfall').addEventListener('click', () => {
+            currentTool = 'waterfall';
+            setActive('btn-waterfall');
+            hideAllParams();
+            document.getElementById('waterfall-params').style.display = 'block';
+        });
+        document.getElementById('btn-pond').addEventListener('click', () => {
+            currentTool = 'pond';
+            setActive('btn-pond');
+            hideAllParams();
+            document.getElementById('pond-params').style.display = 'block';
+        });
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            leftPoints = [];
+            rightPoints = [];
+            bridges = [];
+            waterfalls = [];
+            ponds = [];
+            selectedBridgeIndex = -1;
+            selectedWaterfallIndex = -1;
+            selectedPondIndex = -1;
+            updateBridgeUIFromSelected();
+            updateWaterfallUIFromSelected();
+            updatePondUIFromSelected();
+            redrawCanvas();
+            document.getElementById('status').innerText = 'Очищено';
+        });
+
+        function hideAllParams() {
+            document.getElementById('bridge-params').style.display = 'none';
+            document.getElementById('waterfall-params').style.display = 'none';
+            document.getElementById('pond-params').style.display = 'none';
+            selectedBridgeIndex = -1;
+            selectedWaterfallIndex = -1;
+            selectedPondIndex = -1;
+            updateBridgeUIFromSelected();
+            updateWaterfallUIFromSelected();
+            updatePondUIFromSelected();
+        }
+
+        function setActive(activeId) {
+            ['btn-left','btn-right','btn-width','btn-bridge','btn-waterfall','btn-pond'].forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            document.getElementById(activeId).classList.add('active');
+        }
+        
+        // Сглаживание
+        function smoothLine(points, windowSize = 3) {
+            if (points.length < 3) return points;
+            const smoothed = [];
+            for (let i = 0; i < points.length; i++) {
+                let sumX = 0, sumY = 0, cnt = 0;
+                for (let j = Math.max(0, i-windowSize); j <= Math.min(points.length-1, i+windowSize); j++) {
+                    sumX += points[j].x;
+                    sumY += points[j].y;
+                    cnt++;
+                }
+                smoothed.push({ x: sumX/cnt, y: sumY/cnt });
+            }
+            return smoothed;
+        }
+        document.getElementById('btn-smooth').addEventListener('click', () => {
+            leftPoints = smoothLine(leftPoints, 4);
+            rightPoints = smoothLine(rightPoints, 4);
+            redrawCanvas();
+            document.getElementById('status').innerText = 'Линии сглажены';
+        });
+
+        // Изменение размера canvas
+        document.getElementById('apply-size').addEventListener('click', () => {
+            const w = parseInt(document.getElementById('canvas-w').value);
+            const h = parseInt(document.getElementById('canvas-h').value);
+            if (w > 0 && h > 0) {
+                canvas.width = w;
+                canvas.height = h;
+                leftPoints = [];
+                rightPoints = [];
+                bridges = [];
+                waterfalls = [];
+                ponds = [];
+                selectedBridgeIndex = -1;
+                selectedWaterfallIndex = -1;
+                selectedPondIndex = -1;
+                redrawCanvas();
+            }
+        });
+
+        // --- Текстуры высокого качества ---
+        function createDetailedGrassTexture() {
+            const c = document.createElement('canvas'); c.width = 1024; c.height = 1024;
+            const ct = c.getContext('2d');
+            ct.fillStyle = '#3d7c30';
+            ct.fillRect(0, 0, 1024, 1024);
+            for (let i = 0; i < 20000; i++) {
+                const x = Math.random()*1024;
+                const y = Math.random()*1024;
+                const r = 20 + Math.random()*30;
+                const g = 80 + Math.random()*100;
+                const b = 10 + Math.random()*30;
+                ct.fillStyle = `rgb(${r},${g},${b})`;
+                ct.fillRect(x, y, 2, 8 + Math.random()*15);
+            }
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createDetailedSnowTexture() {
+            const c = document.createElement('canvas'); c.width = 1024; c.height = 1024;
+            const ct = c.getContext('2d');
+            ct.fillStyle = '#f0f8ff';
+            ct.fillRect(0, 0, 1024, 1024);
+            for (let i = 0; i < 10000; i++) {
+                const v = 180 + Math.random()*75;
+                ct.fillStyle = `rgb(${v},${v},${v})`;
+                ct.beginPath();
+                ct.arc(Math.random()*1024, Math.random()*1024, Math.random()*5+1, 0, 2*Math.PI);
+                ct.fill();
+            }
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createWaterBumpTexture() {
+            const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+            const ct = c.getContext('2d');
+            ct.fillStyle = '#808080';
+            ct.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 3000; i++) {
+                const intensity = Math.random()*50 + 50;
+                ct.fillStyle = `rgb(${intensity},${intensity},${intensity})`;
+                ct.beginPath();
+                ct.arc(Math.random()*512, Math.random()*512, Math.random()*4+1, 0, 2*Math.PI);
+                ct.fill();
+            }
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createWoodTexture() {
+            const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+            const ct = c.getContext('2d');
+            ct.fillStyle = '#8B4513';
+            ct.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 500; i++) {
+                const x = Math.random()*512;
+                const y = Math.random()*512;
+                ct.strokeStyle = `rgba(60,30,10,${Math.random()*0.3})`;
+                ct.lineWidth = Math.random()*5+1;
+                ct.beginPath();
+                ct.moveTo(x, y);
+                ct.lineTo(x + (Math.random()-0.5)*100, y + (Math.random()-0.5)*100);
+                ct.stroke();
+            }
+            return new THREE.CanvasTexture(c);
+        }
+
+        function createPondTexture() {
+            const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+            const ct = c.getContext('2d');
+            ct.fillStyle = '#44aaff';
+            ct.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 500; i++) {
+                ct.fillStyle = `rgba(255,255,255,${Math.random()*0.3})`;
+                ct.beginPath();
+                ct.arc(Math.random()*512, Math.random()*512, Math.random()*20+5, 0, 2*Math.PI);
+                ct.fill();
+            }
+            return new THREE.CanvasTexture(c);
+        }
+
+        const grassTex = createDetailedGrassTexture();
+        grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping;
+        grassTex.repeat.set(30, 30);
+        
+        const snowTex = createDetailedSnowTexture();
+        snowTex.wrapS = snowTex.wrapT = THREE.RepeatWrapping;
+        snowTex.repeat.set(30, 30);
+        
+        const waterTex = createWaterBumpTexture();
+        waterTex.wrapS = waterTex.wrapT = THREE.RepeatWrapping;
+        waterTex.repeat.set(20, 10);
+        
+        const woodTex = createWoodTexture();
+        woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
+        woodTex.repeat.set(2, 1);
+
+        const pondTex = createPondTexture();
+        pondTex.wrapS = pondTex.wrapT = THREE.RepeatWrapping;
+        pondTex.repeat.set(1, 1);
+
+        // --- Инициализация Three.js ---
+        const scene = new THREE.Scene(); 
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 50, 300);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.set(20, 12, 30); 
+        camera.lookAt(0,0,0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; 
+        controls.maxPolarAngle = Math.PI/2.2;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = true;
+        
+        // --- Освещение ---
+        const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.5);
+        dirLight.position.set(20, 30, 20);
+        dirLight.castShadow = true;
+        dirLight.receiveShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 100;
+        dirLight.shadow.camera.left = -40;
+        dirLight.shadow.camera.right = 40;
+        dirLight.shadow.camera.top = 40;
+        dirLight.shadow.camera.bottom = -40;
+        scene.add(dirLight);
+
+        const fillLight = new THREE.PointLight(0x4466aa, 0.8);
+        fillLight.position.set(-10, 10, 20);
+        scene.add(fillLight);
+
+        const backLight = new THREE.PointLight(0x88aaff, 0.5);
+        backLight.position.set(0, 5, -20);
+        scene.add(backLight);
+
+        scene.add(new THREE.AmbientLight(0x404060));
+
+        const riverGroup = new THREE.Group(); 
+        scene.add(riverGroup);
+        const groundGroup = new THREE.Group(); 
+        scene.add(groundGroup);
+        const objectsGroup = new THREE.Group(); 
+        scene.add(objectsGroup);
+
+        // --- Наклонная земля ---
+        function createSlopedGround(width, length, hStart, hEnd) {
+            const segments = 80;
+            const geom = new THREE.BufferGeometry();
+            const vertices = [];
+            const indices = [];
+            const normals = [];
+            const uvs = [];
+            const stepX = width / segments;
+            const stepZ = length / segments;
+            for (let i = 0; i <= segments; i++) {
+                const x = -width/2 + i * stepX;
+                for (let j = 0; j <= segments; j++) {
+                    const z = -length/2 + j * stepZ;
+                    const t = (x + width/2) / width;
+                    const y = hStart * (1 - t) + hEnd * t;
+                    vertices.push(x, y, z);
+                    normals.push(0, 1, 0);
+                    uvs.push(i/segments, j/segments);
+                }
+            }
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < segments; j++) {
+                    const a = i * (segments+1) + j;
+                    const b = i * (segments+1) + j + 1;
+                    const c = (i+1) * (segments+1) + j;
+                    const d = (i+1) * (segments+1) + j + 1;
+                    indices.push(a, b, c);
+                    indices.push(b, d, c);
+                }
+            }
+            geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geom.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            geom.setIndex(indices);
+            return geom;
+        }
+
+        const groundGeom = createSlopedGround(200, 200, hStart, hEnd);
+        const groundMat = new THREE.MeshStandardMaterial({ 
+            map: grassTex, 
+            roughness: 0.8,
+            metalness: 0.1,
+            bumpMap: grassTex,
+            bumpScale: 0.5
+        });
+        const ground = new THREE.Mesh(groundGeom, groundMat);
+        ground.receiveShadow = true;
+        ground.castShadow = false;
+        groundGroup.add(ground);
+
+        // Переключение грунта
+        document.querySelectorAll('input[name="ground"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                ground.material.map = e.target.value === 'grass' ? grassTex : snowTex;
+                ground.material.bumpMap = e.target.value === 'grass' ? grassTex : snowTex;
+                ground.material.needsUpdate = true;
+            });
+        });
+
+        // --- Детальный мост с сваями ---
+        function createDetailedBridge(b) {
+            const group = new THREE.Group();
+            
+            const woodMaterial = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.7, color: 0x8B4513 });
+            const darkWood = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.8, color: 0x5D3A1A });
+
+            // Полотно (доски)
+            const plankCount = 15;
+            const plankLength = b.length / plankCount;
+            for (let i = 0; i < plankCount; i++) {
+                const plank = new THREE.Mesh(
+                    new THREE.BoxGeometry(plankLength * 0.95, 0.2, b.width * 0.9),
+                    woodMaterial
+                );
+                plank.position.x = -b.length/2 + i * plankLength + plankLength/2;
+                plank.position.y = 0.2;
+                plank.castShadow = true;
+                plank.receiveShadow = true;
+                group.add(plank);
+            }
+
+            // Продольные балки
+            const beamGeom = new THREE.BoxGeometry(b.length, 0.3, 0.3);
+            const beamMat = darkWood;
+            const beam1 = new THREE.Mesh(beamGeom, beamMat);
+            beam1.position.set(0, 0.4, b.width/2 - 0.2);
+            beam1.castShadow = true;
+            group.add(beam1);
+            const beam2 = beam1.clone();
+            beam2.position.z = -b.width/2 + 0.2;
+            group.add(beam2);
+
+            // Поперечные балки
+            const crossCount = 8;
+            const crossGeom = new THREE.BoxGeometry(0.3, 0.3, b.width);
+            for (let i = 0; i < crossCount; i++) {
+                const t = i / (crossCount-1);
+                const x = -b.length/2 + t * b.length;
+                const cross = new THREE.Mesh(crossGeom, darkWood);
+                cross.position.set(x, 0.4, 0);
+                cross.castShadow = true;
+                group.add(cross);
+            }
+
+            // Сваи (цилиндры)
+            const pierGeom = new THREE.CylinderGeometry(0.3, 0.4, 3.0, 8);
+            const pierMat = new THREE.MeshStandardMaterial({ color: 0x6B4C3B });
+            for (let i = 0; i < 5; i++) {
+                const x = -b.length/2 + i * b.length/4;
+                const pier = new THREE.Mesh(pierGeom, pierMat);
+                pier.position.set(x, -1.5, b.width/2 - 0.3);
+                pier.castShadow = true;
+                pier.receiveShadow = true;
+                group.add(pier);
+                const pier2 = pier.clone();
+                pier2.position.z = -b.width/2 + 0.3;
+                group.add(pier2);
+            }
+
+            // Перила (вертикальные стойки)
+            const pillarGeom = new THREE.BoxGeometry(0.2, 1.2, 0.2);
+            for (let i = 0; i <= 6; i++) {
+                const t = i / 6;
+                const x = -b.length/2 + t * b.length;
+                const pillar = new THREE.Mesh(pillarGeom, darkWood);
+                pillar.position.set(x, 1.0, b.width/2 - 0.1);
+                pillar.castShadow = true;
+                group.add(pillar);
+                const pillar2 = pillar.clone();
+                pillar2.position.z = -b.width/2 + 0.1;
+                group.add(pillar2);
+            }
+
+            // Горизонтальные перила
+            const railGeom = new THREE.BoxGeometry(b.length, 0.1, 0.1);
+            const railMat = darkWood;
+            const railTop = new THREE.Mesh(railGeom, railMat);
+            railTop.position.set(0, 1.5, b.width/2 - 0.1);
+            railTop.castShadow = true;
+            group.add(railTop);
+            const railTop2 = railTop.clone();
+            railTop2.position.z = -b.width/2 + 0.1;
+            group.add(railTop2);
+
+            group.rotation.y = b.rotation * Math.PI / 180;
+            group.position.set(b.x, hStart + 0.5, b.y);
+            
+            return group;
+        }
+
+        // --- Улучшенный водопад ---
+        function createWaterfallEffect(wf) {
+            const group = new THREE.Group();
+            
+            const xMin = Math.min(wf.x1, wf.x2);
+            const xMax = Math.max(wf.x1, wf.x2);
+            const yMin = Math.min(wf.y1, wf.y2);
+            const yMax = Math.max(wf.y1, wf.y2);
+            const centerX = (xMin + xMax) / 2;
+            const centerZ = (yMin + yMax) / 2;
+            const widthZ = Math.abs(yMax - yMin);
+            const height = wf.height;
+            
+            // Вертикальная плоскость (завеса)
+            const planeGeom = new THREE.PlaneGeometry(widthZ, height);
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 256;
+            const ctx2 = canvas.getContext('2d');
+            ctx2.fillStyle = '#88ccff';
+            ctx2.fillRect(0, 0, 64, 256);
+            ctx2.strokeStyle = 'white';
+            ctx2.lineWidth = 2;
+            for (let i = 0; i < 10; i++) {
+                ctx2.beginPath();
+                ctx2.moveTo(0, i*25);
+                ctx2.lineTo(64, i*25 + 20);
+                ctx2.stroke();
+            }
+            const waterTexture = new THREE.CanvasTexture(canvas);
+            waterTexture.wrapS = THREE.RepeatWrapping;
+            waterTexture.wrapT = THREE.RepeatWrapping;
+            waterTexture.repeat.set(1, 5);
+            
+            const planeMat = new THREE.MeshPhongMaterial({
+                map: waterTexture,
+                color: 0xaaddff,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide,
+                emissive: 0x112233
+            });
+            const plane = new THREE.Mesh(planeGeom, planeMat);
+            plane.rotation.y = Math.PI / 2;
+            plane.position.set(centerX, hStart + height/2, centerZ);
+            plane.castShadow = true;
+            plane.receiveShadow = true;
+            group.add(plane);
+            
+            // Пена (частицы)
+            const particleCount = 100;
+            const particleGeom = new THREE.BufferGeometry();
+            const particlePositions = [];
+            for (let i = 0; i < particleCount; i++) {
+                const x = centerX + (Math.random() - 0.5) * 2;
+                const z = centerZ + (Math.random() - 0.5) * widthZ;
+                const y = hStart + Math.random() * 0.5;
+                particlePositions.push(x, y, z);
+            }
+            particleGeom.setAttribute('position', new THREE.Float32BufferAttribute(particlePositions, 3));
+            const particleMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8 });
+            const particles = new THREE.Points(particleGeom, particleMat);
+            group.add(particles);
+            
+            return group;
+        }
+
+        // --- Пруд (эллиптическая форма с камышами) ---
+        function createPond(p) {
+            const group = new THREE.Group();
+            
+            const xMin = Math.min(p.x1, p.x2);
+            const xMax = Math.max(p.x1, p.x2);
+            const yMin = Math.min(p.y1, p.y2);
+            const yMax = Math.max(p.y1, p.y2);
+            const centerX = (xMin + xMax) / 2;
+            const centerZ = (yMin + yMax) / 2;
+            const radiusX = (xMax - xMin) / 2;
+            const radiusZ = (yMax - yMin) / 2;
+            
+            // Водная поверхность (эллипс)
+            const waterGeom = new THREE.CylinderGeometry(radiusX, radiusX, 0.1, 32);
+            waterGeom.rotateX(Math.PI / 2);
+            const waterMat = new THREE.MeshPhongMaterial({
+                map: pondTex,
+                color: 0x88ccff,
+                transparent: true,
+                opacity: 0.8,
+                shininess: 60,
+                emissive: 0x112233
+            });
+            const waterMesh = new THREE.Mesh(waterGeom, waterMat);
+            waterMesh.position.set(centerX, hStart + 0.05, centerZ);
+            waterMesh.receiveShadow = true;
+            waterMesh.castShadow = false;
+            group.add(waterMesh);
+            
+            // Камыши (маленькие цилиндры) по краям
+            const reedMat = new THREE.MeshStandardMaterial({ color: 0x5d8c2b });
+            const reedCount = 30;
+            for (let i = 0; i < reedCount; i++) {
+                const angle = (i / reedCount) * Math.PI * 2;
+                const xOff = Math.cos(angle) * radiusX;
+                const zOff = Math.sin(angle) * radiusZ;
+                const reedGeom = new THREE.CylinderGeometry(0.05, 0.1, 0.8, 6);
+                const reed = new THREE.Mesh(reedGeom, reedMat);
+                reed.position.set(centerX + xOff * 1.1, hStart + 0.4, centerZ + zOff * 1.1);
+                reed.castShadow = true;
+                reed.receiveShadow = true;
+                group.add(reed);
+            }
+            
+            return group;
+        }
+
+        // --- Построение 3D реки ---
+        function buildRiver() {
+            if (leftPoints.length < 2 || rightPoints.length < 2) {
+                document.getElementById('status').innerText = '❌ Нарисуйте оба берега!';
+                return;
+            }
+
+            const N = 150;
+            const leftSamp = resampleCurve(leftPoints, N);
+            const rightSamp = resampleCurve(rightPoints, N);
+            
+            const scale = getScale();
+            const leftWorld = [], rightWorld = [];
+            for (let i = 0; i < N; i++) {
+                const l = leftSamp[i], r = rightSamp[i];
+                leftWorld.push({ x: (l.x - canvas.width/2) * scale, z: (l.y - canvas.height/2) * scale });
+                rightWorld.push({ x: (r.x - canvas.width/2) * scale, z: (r.y - canvas.height/2) * scale });
+            }
+
+            while(riverGroup.children.length) riverGroup.remove(riverGroup.children[0]);
+            while(objectsGroup.children.length) objectsGroup.remove(objectsGroup.children[0]);
+
+            // Высота с учётом водопадов (ступенька)
+            function getHeightAt(t, xWorld, zWorld) {
+                let base = hStart * (1 - t) + hEnd * t;
+                waterfalls.forEach(wf => {
+                    const xMin = Math.min(wf.x1, wf.x2);
+                    const xMax = Math.max(wf.x1, wf.x2);
+                    const yMin = Math.min(wf.y1, wf.y2);
+                    const yMax = Math.max(wf.y1, wf.y2);
+                    if (xWorld >= xMin && xWorld <= xMax && zWorld >= yMin && zWorld <= yMax) {
+                        const centerX = (xMin + xMax) / 2;
+                        if (xWorld < centerX) {
+                            base += wf.height;
+                        }
+                    }
+                });
+                return base;
+            }
+
+            const vertices = [];
+            for (let i = 0; i < N; i++) {
+                const t = i / (N-1);
+                const x = leftWorld[i].x;
+                const zLeft = leftWorld[i].z;
+                const zRight = rightWorld[i].z;
+                const ySurf = getHeightAt(t, x, (zLeft+zRight)/2);
+                vertices.push(
+                    new THREE.Vector3(x, ySurf, zLeft),
+                    new THREE.Vector3(x, ySurf, zRight),
+                    new THREE.Vector3(x, ySurf - depth, zLeft),
+                    new THREE.Vector3(x, ySurf - depth, zRight)
+                );
+            }
+            const posArray = [];
+            vertices.forEach(v => posArray.push(v.x, v.y, v.z));
+
+            // Вода
+            const waterIndices = [];
+            for (let i = 0; i < N-1; i++) {
+                const base = i*4, nxt = (i+1)*4;
+                waterIndices.push(base, base+1, nxt+1, base, nxt+1, nxt);
+            }
+            const waterGeom = new THREE.BufferGeometry();
+            waterGeom.setAttribute('position', new THREE.Float32BufferAttribute(posArray, 3));
+            waterGeom.setIndex(waterIndices);
+            waterGeom.computeVertexNormals();
+            const waterMat = new THREE.MeshPhongMaterial({ 
+                map: waterTex, 
+                color: 0x88ccff,
+                transparent: true, 
+                opacity: 0.9, 
+                side: THREE.DoubleSide,
+                shininess: 100,
+                emissive: 0x112233
+            });
+            const waterMesh = new THREE.Mesh(waterGeom, waterMat);
+            waterMesh.receiveShadow = true;
+            riverGroup.add(waterMesh);
+
+            // Дно и стены
+            const bankIndices = [];
+            for (let i = 0; i < N-1; i++) {
+                const base = i*4, nxt = (i+1)*4;
+                bankIndices.push(base+2, base+3, nxt+3, base+2, nxt+3, nxt+2);
+                bankIndices.push(base, nxt+2, base+2, base, nxt, nxt+2);
+                bankIndices.push(base+1, base+3, nxt+3, base+1, nxt+3, nxt+1);
+            }
+            const bankGeom = new THREE.BufferGeometry();
+            bankGeom.setAttribute('position', new THREE.Float32BufferAttribute(posArray, 3));
+            bankGeom.setIndex(bankIndices);
+            bankGeom.computeVertexNormals();
+            const bankMat = new THREE.MeshPhongMaterial({ color: 0x44aaff, transparent: true, opacity: 0.3, side: THREE.DoubleSide });
+            const bankMesh = new THREE.Mesh(bankGeom, bankMat);
+            bankMesh.receiveShadow = true;
+            riverGroup.add(bankMesh);
+
+            // Торцы
+            function addCap(indices, flip) {
+                const geom = new THREE.BufferGeometry();
+                const pts = [];
+                indices.forEach(i => pts.push(vertices[i].x, vertices[i].y, vertices[i].z));
+                geom.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+                geom.setIndex(flip ? [0,2,1,0,3,2] : [0,1,2,0,2,3]);
+                geom.computeVertexNormals();
+                riverGroup.add(new THREE.Mesh(geom, bankMat));
+            }
+            addCap([0,1,3,2], false);
+            addCap([(N-1)*4, (N-1)*4+1, (N-1)*4+3, (N-1)*4+2], true);
+
+            // Мосты
+            bridges.forEach(b => {
+                const bridgeGroup = createDetailedBridge(b);
+                objectsGroup.add(bridgeGroup);
+            });
+
+            // Водопады
+            waterfalls.forEach(wf => {
+                const wfGroup = createWaterfallEffect(wf);
+                objectsGroup.add(wfGroup);
+            });
+
+            // Пруды
+            ponds.forEach(p => {
+                const pondGroup = createPond(p);
+                objectsGroup.add(pondGroup);
+            });
+
+            document.getElementById('status').innerText = '✅ 3D река построена!';
+        }
+
+        document.getElementById('build-btn').addEventListener('click', buildRiver);
+
+        // --- Анимация воды ---
+        let time = 0;
+        function animateWater() {
+            time += 0.005;
+            if (waterTex) waterTex.offset.x = time * 0.1;
+            requestAnimationFrame(animateWater);
+        }
+        animateWater();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        redrawCanvas();
+    </script>
+</body>
+</html>

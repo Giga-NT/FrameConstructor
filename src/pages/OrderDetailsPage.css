@@ -1,3 +1,6 @@
+/* ============ OrderDetailsPage.css ============ */
+/* Исправлено: контрастность + мобильная адаптация */
+
 .order-details-container {
   max-width: 1000px;
   margin: 40px auto;
@@ -9,14 +12,14 @@
 }
 
 h2 {
-  color: #1e293b;
+  color: #0b1c2f; /* тёмно-синий, контраст 15:1 */
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 20px;
 }
 
 .order-section {
-  background-color: #f9fafb;
+  background-color: #f8fafc;
   padding: 24px;
   border-radius: 12px;
   margin-bottom: 24px;
@@ -27,7 +30,7 @@ h2 {
   margin-top: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1e293b;
+  color: #0f293f;
   margin-bottom: 16px;
 }
 
@@ -47,30 +50,34 @@ h2 {
 .order-info p,
 .customer-info p {
   margin: 6px 0;
-  color: #475569;
+  color: #1e3a5f; /* тёмный, контраст >9:1 */
   font-size: 14px;
+  font-weight: 500;
 }
 
+/* === Статусы – контрастные цвета === */
 .status-new {
-  color: #2196F3;
-  font-weight: 600;
+  color: #0f62ac; /* тёмно-синий */
+  font-weight: 700;
 }
-
 .status-processing {
-  color: #FF9800;
-  font-weight: 600;
+  color: #b45b0f; /* тёмно-оранжевый */
+  font-weight: 700;
 }
-
 .status-completed {
-  color: #4CAF50;
-  font-weight: 600;
+  color: #1e6f3c; /* тёмно-зелёный */
+  font-weight: 700;
 }
-
 .status-cancelled {
-  color: #f44336;
-  font-weight: 600;
+  color: #b32d2d; /* тёмно-красный */
+  font-weight: 700;
+}
+.status-archived {
+  color: #4a5568; /* тёмно-серый */
+  font-weight: 700;
 }
 
+/* === Таблица === */
 .cost-table {
   width: 100%;
   border-collapse: collapse;
@@ -80,31 +87,33 @@ h2 {
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
-
 .cost-table thead {
-  background-color: #f1f5f9;
+  background-color: #e6edf5; /* чуть темнее */
 }
-
 .cost-table th,
 .cost-table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #cbd5e1;
 }
-
 .cost-table th {
-  font-weight: 600;
-  color: #1e293b;
+  font-weight: 700;
+  color: #0c1e2e;
+  background-color: #e6edf5;
 }
-
+.cost-table td {
+  color: #1e3a5f;
+}
 .cost-table tfoot {
-  background-color: #f8fafc;
-  font-weight: bold;
+  background-color: #edf2f7;
+  font-weight: 700;
+  color: #0b1c2f;
 }
 
+/* === Кнопки – контрастные === */
 .back-btn {
   padding: 12px 24px;
-  background: linear-gradient(to right, #6c757d, #495057);
+  background: #2d3f4f; /* тёмный сланец */
   color: white;
   border: none;
   border-radius: 8px;
@@ -113,10 +122,10 @@ h2 {
   font-weight: 600;
   transition: all 0.3s ease;
 }
-
 .back-btn:hover {
+  background: #1f2e3b;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  box-shadow: 0 4px 12px rgba(45, 63, 79, 0.4);
 }
 
 .order-actions {
@@ -124,33 +133,88 @@ h2 {
   gap: 10px;
   margin-top: 20px;
 }
-
 .order-actions .back-btn {
   flex-grow: 1;
 }
 
 .archive-btn {
-  background-color: #f39c12;
+  background-color: #b45b0f; /* тёмно-оранжевый */
   color: white;
-  padding: 8px 16px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.archive-btn:hover {
+  background-color: #8e490c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(180, 91, 15, 0.4);
 }
 
 .restore-btn {
-  background-color: #2ecc71;
+  background-color: #1e6f3c; /* тёмно-зелёный */
   color: white;
-  padding: 8px 16px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
-
-.archive-btn:hover {
-  background-color: #e67e22;
-}
-
 .restore-btn:hover {
-  background-color: #27ae60;
+  background-color: #155a2e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 111, 60, 0.4);
+}
+
+/* === Мобильная адаптация (все устройства) === */
+@media (max-width: 768px) {
+  .order-details-container {
+    margin: 20px 12px;
+    padding: 20px 12px;
+  }
+  h2 {
+    font-size: 24px;
+  }
+  .parameters-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .order-info,
+  .customer-info {
+    grid-template-columns: 1fr; /* одна колонка на мобилках */
+    gap: 8px;
+  }
+  .cost-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .order-actions {
+    flex-direction: column;
+  }
+  .order-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-details-container {
+    padding: 16px 10px;
+  }
+  h2 {
+    font-size: 22px;
+  }
+  .order-section {
+    padding: 16px;
+  }
+  .back-btn,
+  .archive-btn,
+  .restore-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
 }

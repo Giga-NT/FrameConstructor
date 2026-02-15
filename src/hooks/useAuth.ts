@@ -38,6 +38,7 @@ export interface GazeboParams {
   length: number;
   height: number;
   railingHeight: number;
+  overhang?: number;
   pillarSize: '100x100' | '80x80' | '60x60';
   color: string;
   materialType: 'wood' | 'metal';
