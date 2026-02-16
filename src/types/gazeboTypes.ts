@@ -20,7 +20,8 @@ export interface GazeboParams {
   roofHeight: number;
   roofType: 'gable' | 'arched' | 'single';
   pillarType: 'straight' | 'curved';
-  pillarCount: number;
+  pillarSpacing: number;          // шаг стоек (м)
+  pillarCount?: number;            // опционально, может вычисляться
   pillarSize: '100x100' | '80x80' | '60x60';
   beamSize: '100x100' | '80x80' | '60x60';
   railingHeight: number;
@@ -28,25 +29,40 @@ export interface GazeboParams {
   benchCount: number;
   tableSize: 'small' | 'medium' | 'large';
   foundationType: 'wood' | 'concrete' | 'piles' | 'none';
-  floorType: 'wood' | 'tile' | 'concrete' | 'none'; 
+  floorType: 'wood' | 'tile' | 'concrete' | 'none';
   materialType: 'wood' | 'metal' | 'combined';
   color: string;
   roofColor: string;
   floorColor: string;
   groundType: 'grass' | 'wood' | 'concrete';
   showBackground: boolean;
-  benchLength?: number;          // опционально
-  benchSeatWidth?: number;       // опционально
-  benchHeight?: number;          // опционально
-  tableCount: number;            // обязательно (укажите значение по умолчанию)
-  tableLegsColor: string;        // обязательно
-  tableTopColor: string;         // обязательно
-  tableWidth?: number;           // опционально
-  tableDepth?: number;           // опционально
-  tableHeight?: number;          // опционально
-  tableType?: 'simple' | 'model'; // по умолчанию 'simple'
+  benchLength?: number;
+  benchSeatWidth?: number;
+  benchHeight?: number;
+  tableCount: number;
+  tableLegsColor: string;
+  tableTopColor: string;
+  tableWidth?: number;
+  tableDepth?: number;
+  tableHeight?: number;
+  tableType?: 'simple' | 'model';
   overhang: number;
-  tableRotation?: 0 | 90; // угол поворота стола в градусах (0 – стандартно, 90 – поперёк)
+  tableRotation?: 0 | 90;
+
+  // Поля для каркаса крыши
+  constructionType: 'truss' | 'beam';
+  trussType: 'simple' | 'reinforced' | 'lattice';
+  trussCount: number;
+  lathingStep: number;
+
+  // Размеры труб для разных элементов
+  pillarTubeSize: string;   // для стоек
+  roofTubeSize: string;     // для верхнего пояса ферм
+  trussTubeSize: string;    // для раскосов ферм
+  lathingTubeSize: string;  // для обрешётки
+
+  showRoofCover: boolean;
+  showGables: boolean;
 }
 
 export const initialGazeboParams: GazeboParams = {
@@ -56,7 +72,7 @@ export const initialGazeboParams: GazeboParams = {
   roofHeight: 1,
   roofType: 'gable',
   pillarType: 'straight',
-  pillarCount: 4,
+  pillarSpacing: 2.0,          // шаг стоек 2 метра
   pillarSize: '100x100',
   beamSize: '80x80',
   railingHeight: 0.9,
@@ -66,21 +82,30 @@ export const initialGazeboParams: GazeboParams = {
   foundationType: 'wood',
   floorType: 'wood',
   materialType: 'wood',
-  color: '#8B4513',
-  roofColor: '#A0522D',
-  floorColor: '#D2B48C',
+  color: '#4682B4',
+  roofColor: '#4682B4',
+  floorColor: '#ec9a74',
   groundType: 'grass',
   showBackground: true,
-  // новые обязательные поля
   tableCount: 1,
-  tableLegsColor: '#8B4513',
-  tableTopColor: '#D2B48C',
-  // опциональные поля (можно задать значения по умолчанию)
+  tableLegsColor: '#1d1c21',
+  tableTopColor: '#2105f5',
   benchSeatWidth: 0.4,
   benchHeight: 0.45,
   tableType: 'simple',
   overhang: 0.2,
   tableRotation: 0,
+
+  constructionType: 'truss',
+  trussType: 'simple',
+  trussCount: 3,
+  lathingStep: 0.5,
+  pillarTubeSize: '100x100',
+  roofTubeSize: '80x80',
+  trussTubeSize: '60x60',
+  lathingTubeSize: '40x20',
+  showRoofCover: true,
+  showGables: false,
 };
 
 export interface GazeboWallsProps {

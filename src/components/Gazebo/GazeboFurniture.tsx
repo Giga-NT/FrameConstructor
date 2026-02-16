@@ -42,7 +42,7 @@ const GazeboFurniture: React.FC<GazeboFurnitureProps> = ({ params }) => {
 
   // Материал для скамеек
   const benchMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#8B4513',
+    color: '#4682B4',
     roughness: 0.7
   }), []);
 

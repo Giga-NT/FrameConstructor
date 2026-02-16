@@ -179,7 +179,7 @@ const Ground = ({ groundType = 'grass' }: { groundType?: 'grass' | 'wood' | 'con
     
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       map: groundTexture,
-      roughness: 1.0,
+      roughness: 0.4,
       metalness: 0.0
     });
     
@@ -678,12 +678,15 @@ useEffect(() => {
           >
             <Sky distance={10000} sunPosition={[10, 20, 10]} />
             <Ground groundType={params.groundType} />
-            <ambientLight intensity={0.5} />
-            <pointLight 
-              position={[params.width * 2, params.height * 3, params.length * 2]} 
-              intensity={1}
-              castShadow
-            />
+			<ambientLight intensity={1.2} />
+			<directionalLight
+			  position={[10, 20, 10]}
+			  intensity={1.2}
+			  castShadow
+			  shadow-mapSize-width={1024}
+			  shadow-mapSize-height={1024}
+			/>
+			<directionalLight position={[-10, 10, -10]} intensity={0.6} />
             
             {params.type === 'arched' && <ArchedRoof params={params} />}
             {params.type === 'gable' && <GableRoof params={params} />}

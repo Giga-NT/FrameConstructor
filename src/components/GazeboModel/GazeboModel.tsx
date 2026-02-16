@@ -16,8 +16,11 @@ import GazeboFoundation from '../Gazebo/GazeboFoundation';
 import GazeboFurniture from '../Gazebo/GazeboFurniture';
 // Импортируем тип и начальные параметры из единого места
 import { GazeboParams, initialGazeboParams } from '../../types/gazeboTypes';
-
-
+import GazeboPillars from '../Gazebo/GazeboPillars';
+import GazeboTrusses from '../Gazebo/GazeboTrusses';
+import GazeboLathing from '../Gazebo/GazeboLathing';
+import GazeboRoofCover from '../Gazebo/GazeboRoofCover';
+import GazeboGables from '../Gazebo/GazeboGables';
 
 // Цены для расчета стоимости
 interface MaterialPrices {
@@ -614,55 +617,47 @@ const GazeboModel: React.FC = () => {
           >
             <Sky distance={10000} sunPosition={[10, 20, 10]} />
             <Ground groundType={params.groundType} />
-            <ambientLight intensity={0.5} />
-            <pointLight
-              position={[params.width * 2, params.height * 3, params.length * 2]}
-              intensity={1}
-              castShadow
-            />
+			<ambientLight intensity={1.2} />
+			<directionalLight
+			  position={[10, 20, 10]}
+			  intensity={1.2}
+			  castShadow
+			  shadow-mapSize-width={1024}
+			  shadow-mapSize-height={1024}
+			/>
+			<directionalLight position={[-10, 10, -10]} intensity={0.6} />
 
             <GazeboWalls params={params} />
 
-            {/* Двухскатная крыша */}
-            {params.roofType === 'gable' && (
-              <GableRoof
-                params={{
-                  width: params.width,
-                  length: params.length,
-                  height: params.height,
-                  roofHeight: params.roofHeight,
-                  roofColor: params.roofColor,
-                  color: params.color,                // ✅ добавлено
-                  materialType: params.materialType,
-                  overhang: params.overhang,          // ✅ теперь существует
-                }}
-              />
-            )}
 
-            {/* Арочная крыша */}
-            {params.roofType === 'arched' && (
-              <ArchedRoof
-                params={{
-                  ...params,
-                  frameColor: params.color,
-                  roofColor: params.roofColor
-                }}
-              />
-            )}
+			{/* Двухскатная крыша */}
+			{params.roofType === 'gable' && (
+			  <>
+				<GazeboTrusses params={params} />
+				<GazeboLathing params={params} />
+				{params.showRoofCover && <GazeboRoofCover params={params} offsetY={0.05} />}
+				{params.showGables && <GazeboGables params={params} />}
+			  </>
+			)}
 
-            {/* Односкатная крыша */}
+			{/* Односкатная крыша (без смещения, при необходимости можно добавить аналогично) */}
 			{params.roofType === 'single' && (
-			  <SingleSlopeRoof
-				params={{
-				  width: params.width,
-				  length: params.length,
-				  height: params.height,
-				  roofHeight: params.roofHeight,
-				  roofColor: params.roofColor,
-				  materialType: params.materialType === 'combined' ? 'wood' : params.materialType,
-				  overhang: params.overhang,
-				}}
-			  />
+			  <>
+				<GazeboTrusses params={params} />
+				<GazeboLathing params={params} />
+				{params.showRoofCover && <GazeboRoofCover params={params} />}
+				{params.showGables && <GazeboGables params={params} />}
+			  </>
+			)}
+
+			{/* Арочная крыша (без смещения) */}
+			{params.roofType === 'arched' && (
+			  <>
+				<GazeboTrusses params={params} />
+				<GazeboLathing params={params} />
+				{params.showRoofCover && <GazeboRoofCover params={params} />}
+				{params.showGables && <GazeboGables params={params} />}
+			  </>
 			)}
             <GazeboFoundation params={params} />
             {params.hasFurniture && <GazeboFurniture params={params} />}

@@ -1,16 +1,24 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
+import { GazeboParams } from '../../types/gazeboTypes';
+import Beam from '../Beams/Beam'; // если Beam используется
 
-const GazeboWalls: React.FC<{ params: any }> = ({ params }) => {
+const GazeboWalls: React.FC<{ params: GazeboParams }> = ({ params }) => {
   const {
     width = 3,
     length = 3,
     height = 2.5,
     pillarType = 'straight',
     pillarSize = '100x100',
-    color = '#8B4513',
+    color = '#4682B4',
     railingHeight = 0.9,
+    pillarSpacing = 2.0,
   } = params;
+
+  // Вычисляем количество стоек на основе шага
+  const pillarCount = useMemo(() => {
+    return Math.max(2, Math.ceil(length / pillarSpacing) + 1);
+  }, [length, pillarSpacing]);
 
   const pillarDim = useMemo(() => {
     switch (pillarSize) {
@@ -26,7 +34,7 @@ const GazeboWalls: React.FC<{ params: any }> = ({ params }) => {
     [color]
   );
 
-  // Позиции четырёх углов
+  // Позиции четырёх углов (для расчёта кривых)
   const cornerPositions: [number, number, number][] = [
     [-width / 2, 0, -length / 2],
     [ width / 2, 0, -length / 2],
@@ -34,7 +42,7 @@ const GazeboWalls: React.FC<{ params: any }> = ({ params }) => {
     [-width / 2, 0,  length / 2]
   ];
 
-  // Данные о каждом столбе (угол + кривая, если гнутая)
+  // Данные о каждом угловом столбе (для изгиба)
   const pillarsData = useMemo(() => {
     return cornerPositions.map(([x, y, z], i) => {
       const dirX = x > 0 ? 1 : -1;
@@ -44,15 +52,15 @@ const GazeboWalls: React.FC<{ params: any }> = ({ params }) => {
         curve = new THREE.CubicBezierCurve3(
           new THREE.Vector3(0, 0, 0),
           new THREE.Vector3(dirX * 0.2, height * 0.3, dirZ * 0.2),
-          new THREE.Vector3(dirX * 0.4, height * 0.7, dirZ * 0.4),
-          new THREE.Vector3(dirX * 0.2, height, dirZ * 0.2)
+          new THREE.Vector3(dirX * 0.2, height * 0.7, dirZ * 0.2),
+          new THREE.Vector3(0, height, 0) // верх строго над основанием
         );
       }
       return { corner: [x, y, z] as [number, number, number], dirX, dirZ, curve };
     });
   }, [cornerPositions, pillarType, height]);
 
-  // Функция получения позиции столба на заданной высоте Y
+  // Функция получения позиции столба на заданной высоте Y (для перил)
   const getPillarPositionAtY = (pillarData: typeof pillarsData[0], y: number) => {
     const [cx, , cz] = pillarData.corner;
     if (pillarType === 'straight' || !pillarData.curve) {
@@ -64,17 +72,37 @@ const GazeboWalls: React.FC<{ params: any }> = ({ params }) => {
     }
   };
 
-  // ----- СТОЛБЫ -----
+  // Генерация всех стоек (не только угловых)
   const pillars = useMemo(() => {
-    return pillarsData.map((data, i) => {
-      const [cx, cy, cz] = data.corner;
-      if (pillarType === 'curved' && data.curve) {
+    // Позиции всех стоек вдоль левой и правой стены
+    const step = length / (pillarCount - 1);
+    const positions: THREE.Vector3[] = [];
+    for (let i = 0; i < pillarCount; i++) {
+      const zPos = -length / 2 + i * step;
+      positions.push(
+        new THREE.Vector3(-width / 2, 0, zPos),
+        new THREE.Vector3(width / 2, 0, zPos)
+      );
+    }
+
+    return positions.map((pos, idx) => {
+      const [cx, cy, cz] = [pos.x, pos.y, pos.z];
+      // Для изогнутых стоек нужно создать кривую для каждой позиции
+      if (pillarType === 'curved') {
+        const dirX = cx > 0 ? 1 : -1;
+        const dirZ = cz > 0 ? 1 : -1;
+        const curve = new THREE.CubicBezierCurve3(
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(dirX * 0.2, height * 0.3, dirZ * 0.2),
+          new THREE.Vector3(dirX * 0.2, height * 0.7, dirZ * 0.2),
+          new THREE.Vector3(0, height, 0)
+        );
         const curvePath = new THREE.CurvePath<THREE.Vector3>();
-        curvePath.add(data.curve);
+        curvePath.add(curve);
         const geometry = new THREE.TubeGeometry(curvePath, 8, pillarDim.w / 2, 6, false);
         return (
           <mesh
-            key={`curved-pillar-${i}`}
+            key={`curved-pillar-${idx}`}
             geometry={geometry}
             material={material}
             position={[cx, cy, cz]}
@@ -85,7 +113,7 @@ const GazeboWalls: React.FC<{ params: any }> = ({ params }) => {
       } else {
         return (
           <mesh
-            key={`straight-pillar-${i}`}
+            key={`straight-pillar-${idx}`}
             geometry={new THREE.BoxGeometry(pillarDim.w, height, pillarDim.d)}
             material={material}
             position={[cx, height / 2, cz]}
@@ -95,11 +123,10 @@ const GazeboWalls: React.FC<{ params: any }> = ({ params }) => {
         );
       }
     });
-  }, [pillarsData, pillarType, height, pillarDim, material]);
+  }, [pillarCount, width, length, height, pillarType, pillarDim, material]);
 
-  // ----- ПЕРИЛА (привязываются к фактическим позициям столбов) -----
+  // ----- ПЕРИЛА (привязываются к угловым стойкам, как раньше) -----
   const railings = useMemo(() => {
-    // Индексы углов для каждой стороны (кроме передней)
     const sides = [
       { startIdx: 1, endIdx: 2 }, // правая
       { startIdx: 2, endIdx: 3 }, // задняя

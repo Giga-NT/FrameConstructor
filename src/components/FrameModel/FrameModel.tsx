@@ -202,7 +202,7 @@ const Ground = ({ groundType }: { groundType: string }) => {
     
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       map: groundTexture,
-      roughness: 1.0,
+      roughness: 0.4,
       metalness: 0.0
     });
     
@@ -915,7 +915,15 @@ const handleSaveProject = async () => {
           >
             <Sky distance={10000} sunPosition={[10, 20, 10]} />
             <Ground groundType={params.groundType} />
-            <ambientLight intensity={0.5} />
+			<ambientLight intensity={1.2} />
+			<directionalLight
+			  position={[10, 20, 10]}
+			  intensity={1.2}
+			  castShadow
+			  shadow-mapSize-width={1024}
+			  shadow-mapSize-height={1024}
+			/>
+			<directionalLight position={[-10, 10, -10]} intensity={0.6} />
             <pointLight position={[params.width * 2, params.height * 3, params.length * 2]} intensity={1} />
             
             <Pillars params={params} />
