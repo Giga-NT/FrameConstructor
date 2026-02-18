@@ -43,6 +43,19 @@
   font-weight: 700;
   transition: all 0.3s ease;
 }
+
+.admin-btn {
+  padding: 10px 20px;
+  background: #b32d2d; /* тёмно-красный */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
 .logout-btn:hover {
   background: #942626;
   transform: translateY(-2px);

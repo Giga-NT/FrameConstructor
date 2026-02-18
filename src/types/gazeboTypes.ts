@@ -63,6 +63,7 @@ export interface GazeboParams {
 
   showRoofCover: boolean;
   showGables: boolean;
+  pillarBendDirection: 'inward' | 'outward';
 }
 
 export const initialGazeboParams: GazeboParams = {
@@ -106,6 +107,7 @@ export const initialGazeboParams: GazeboParams = {
   lathingTubeSize: '40x20',
   showRoofCover: true,
   showGables: false,
+  pillarBendDirection: 'outward',
 };
 
 export interface GazeboWallsProps {

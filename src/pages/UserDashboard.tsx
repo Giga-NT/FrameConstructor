@@ -636,6 +636,9 @@ const handleOpenProject = (project: Project) => {
         <button onClick={logout} className="logout-btn">
           Выйти
         </button>
+		<button onClick={() => navigate('/admin/prices')} className="admin-btn">
+		  Управление ценами
+		</button>
       </header>
 
       <div className="user-card">

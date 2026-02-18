@@ -9,6 +9,8 @@ import GreenhouseModel from './components/GreenhouseModel/GreenhouseModel';
 import { OrderPage } from './pages/OrderPage';
 import { OrderDetailsPage } from './pages/OrderDetailsPage';
 import GazeboModel from './components/GazeboModel/GazeboModel'; // Добавьте этот импорт
+import AdminRoute from './components/AdminRoute';
+import PriceEditor from './components/PriceEditor';
 
 function App() {
   return (
@@ -48,6 +50,11 @@ function App() {
           </ProtectedRoute>
         }
       />
+	  <Route path="/admin/prices" element={
+	    <AdminRoute>
+		<PriceEditor />
+	    </AdminRoute>
+	  } />
       <Route
         path="/order"
         element={

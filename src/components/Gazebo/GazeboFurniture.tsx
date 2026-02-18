@@ -205,11 +205,12 @@ const GazeboFurniture: React.FC<GazeboFurnitureProps> = ({ params }) => {
     baseWidth, baseDepth, baseHeight, MODEL_ORIG_WIDTH, MODEL_ORIG_DEPTH, MODEL_ORIG_HEIGHT
   ]);
 
-  // ----- СКАМЕЙКИ (без изменений) -----
+  // ----- СКАМЕЙКИ -----
   const benches = useMemo(() => {
     const benchesArray: React.ReactElement[] = [];
     const benchWidth = benchSeatWidth;
-    const benchOverhang = 0.2;
+    // Увеличиваем отступ от стены, чтобы скамейки не пересекались со стойками и перилами
+    const benchOverhang = 0.4; // было 0.2
     const legSpacing = 1.0;
     const seatHeight = benchHeight;
     const seatThickness = 0.05;

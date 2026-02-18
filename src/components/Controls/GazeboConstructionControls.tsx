@@ -21,6 +21,17 @@ const GazeboConstructionControls: React.FC<GazeboConstructionControlsProps> = ({
         </Select>
       </InputGroup>
 
+	<InputGroup>
+	  <Label>Направление изгиба стоек</Label>
+	  <Select
+		value={params.pillarBendDirection}
+		onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('pillarBendDirection', e.target.value)}
+	  >
+		<option value="outward">Наружу</option>
+		<option value="inward">Внутрь</option>
+	  </Select>
+	</InputGroup>
+
       <InputGroup>
         <Label>Шаг стоек (м)</Label>
         <Input
