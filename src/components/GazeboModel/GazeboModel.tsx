@@ -479,7 +479,7 @@ useEffect(() => {
   return (
     <Container $isMobile={isMobile}>
       <ControlsPanel $isMobile={isMobile}>
-        <GazeboControls params={params} onChange={handleParamChange} costData={costData} />
+        <GazeboControls params={params} onChange={handleParamChange} />
       </ControlsPanel>
 
       <ModelView $isMobile={isMobile}>
