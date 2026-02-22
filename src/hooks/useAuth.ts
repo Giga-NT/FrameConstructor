@@ -575,6 +575,30 @@ const register = async (userData: any) => {
     }
   };
 
+const deleteProject = (projectId: string) => {
+  if (!currentUser) return;
+
+  setIsLoading(true);
+  try {
+    const users = browserStorage.getUsers();
+    const userIndex = users.findIndex((u: any) => u.id === currentUser.id);
+    if (userIndex === -1) return;
+
+    const updatedProjects = currentUser.projects?.filter(p => p.id !== projectId) || [];
+    const updatedUser = { ...currentUser, projects: updatedProjects };
+
+    users[userIndex] = updatedUser;
+    browserStorage.saveUsers(users);
+    browserStorage.saveCurrentUser(updatedUser);
+    setCurrentUser(updatedUser);
+  } catch (err) {
+    console.error('Failed to delete project', err);
+    throw err;
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   // Создание тестового пользователя
   const createTestUser = async () => {
     try {
@@ -614,6 +638,7 @@ const register = async (userData: any) => {
     archiveOrder,
     restoreOrder,
     deleteOrder,
+	deleteProject,
     createTestUser,
     setError
   };

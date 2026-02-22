@@ -504,7 +504,8 @@ export const UserDashboard = () => {
     getUserOrders, 
     archiveOrder, 
     restoreOrder,
-    deleteOrder 
+    deleteOrder,
+    deleteProject 
   } = useAuth();
   const navigate = useNavigate();
 
@@ -517,27 +518,16 @@ export const UserDashboard = () => {
 const handleDeleteProject = async (projectId: string) => {
   if (!currentUser) return;
   if (!window.confirm('Вы уверены, что хотите удалить проект?')) return;
-  
+
+  setDeletingId(projectId);
   try {
-    const updatedProjects = currentUser.projects?.filter(p => p.id !== projectId) || [];
-    
-    // Обновляем в списке всех пользователей
-    const users = JSON.parse(localStorage.getItem('giga-nt-users') || '[]');
-    const userIndex = users.findIndex((u: any) => u.id === currentUser.id);
-    
-    if (userIndex !== -1) {
-      users[userIndex].projects = updatedProjects;
-      localStorage.setItem('giga-nt-users', JSON.stringify(users));
-      
-      // Обновляем текущего пользователя
-      const updatedUser = { ...currentUser, projects: updatedProjects };
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      
-      // ПЕРЕЗАГРУЗКА СТРАНИЦЫ - просто и надежно
-      window.location.reload();
-    }
+    await deleteProject(projectId);
+    // состояние обновится автоматически
   } catch (error) {
     console.error('Ошибка при удалении проекта:', error);
+    alert('Ошибка при удалении');
+  } finally {
+    setDeletingId(null);
   }
 };
 
