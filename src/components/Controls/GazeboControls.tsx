@@ -34,6 +34,26 @@ const GazeboControls: React.FC<GazeboControlsProps> = ({ params, onChange }) => 
     setActiveColorPicker(activeColorPicker === pickerName ? null : pickerName);
   };
 
+  // Безопасный обработчик для обязательных числовых полей (не допускает NaN)
+  const handleRequiredNumber = (name: keyof GazeboParams, min: number, max: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') return; // игнорируем пустую строку
+    const num = parseFloat(value);
+    if (!isNaN(num) && num >= min && num <= max) {
+      onChange(name, num);
+    }
+  };
+
+  // Обработчик для целочисленных полей (pillarCount, benchCount, tableCount)
+  const handleRequiredInt = (name: keyof GazeboParams, min: number, max: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') return;
+    const num = parseInt(value, 10);
+    if (!isNaN(num) && num >= min && num <= max) {
+      onChange(name, num);
+    }
+  };
+
   return (
     <Container>
       <Title>Конструктор беседки</Title>
@@ -46,7 +66,7 @@ const GazeboControls: React.FC<GazeboControlsProps> = ({ params, onChange }) => 
           <Input
             type="number"
             value={params.length}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('length', parseFloat(e.target.value))}
+            onChange={handleRequiredNumber('length', 2, 10)}
             min="2"
             max="10"
             step="0.1"
@@ -57,7 +77,7 @@ const GazeboControls: React.FC<GazeboControlsProps> = ({ params, onChange }) => 
           <Input
             type="number"
             value={params.width}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('width', parseFloat(e.target.value))}
+            onChange={handleRequiredNumber('width', 2, 10)}
             min="2"
             max="10"
             step="0.1"
@@ -68,59 +88,58 @@ const GazeboControls: React.FC<GazeboControlsProps> = ({ params, onChange }) => 
           <Input
             type="number"
             value={params.height}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('height', parseFloat(e.target.value))}
+            onChange={handleRequiredNumber('height', 1.5, 4)}
             min="1.5"
             max="4"
             step="0.1"
           />
         </InputGroup>
-		<InputGroup>
-		  <Label>Тип крыши</Label>
-		  <Select
-			value={params.roofType}
-			onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('roofType', e.target.value)}
-		  >
-			<option value="gable">Двухскатная</option>
-			<option value="arched">Арочная</option>
-			<option value="single">Односкатная</option>
-		  </Select>
-		</InputGroup>
+        <InputGroup>
+          <Label>Тип крыши</Label>
+          <Select
+            value={params.roofType}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange('roofType', e.target.value)}
+          >
+            <option value="gable">Двухскатная</option>
+            <option value="arched">Арочная</option>
+            <option value="single">Односкатная</option>
+          </Select>
+        </InputGroup>
 
-		{(params.roofType === 'gable' || params.roofType === 'single' || params.roofType === 'arched') && (
-		  <InputGroup>
-			<Label>Высота крыши (м)</Label>
-			<Input
-			  type="number"
-			  value={params.roofHeight}
-			  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('roofHeight', parseFloat(e.target.value))}
-			  min="0.3"
-			  max="3"
-			  step="0.1"
-			/>
-		  </InputGroup>
-		)}
+        {(params.roofType === 'gable' || params.roofType === 'single' || params.roofType === 'arched') && (
+          <InputGroup>
+            <Label>Высота крыши (м)</Label>
+            <Input
+              type="number"
+              value={params.roofHeight}
+              onChange={handleRequiredNumber('roofHeight', 0.3, 3)}
+              min="0.3"
+              max="3"
+              step="0.1"
+            />
+          </InputGroup>
+        )}
 
-		<InputGroup>
-		  <Label>Свес кровли (м)</Label>
-		  <Input
-			type="number"
-			value={params.overhang}
-			onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('overhang', parseFloat(e.target.value))}
-			min="0"
-			max="0.5"
-			step="0.05"
-		  />
-		</InputGroup>
-		<CheckboxContainer>
-		  <CheckboxItem onClick={() => onChange('showRoofCover', !params.showRoofCover)}>
-			<StyledCheckbox
-			  checked={params.showRoofCover || false}
-			  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('showRoofCover', e.target.checked)}
-			/>
-			<Label>Показать поликарбонатное покрытие</Label>
-		  </CheckboxItem>
-		</CheckboxContainer>		
-
+        <InputGroup>
+          <Label>Свес кровли (м)</Label>
+          <Input
+            type="number"
+            value={params.overhang}
+            onChange={handleRequiredNumber('overhang', 0, 0.5)}
+            min="0"
+            max="0.5"
+            step="0.05"
+          />
+        </InputGroup>
+        <CheckboxContainer>
+          <CheckboxItem onClick={() => onChange('showRoofCover', !params.showRoofCover)}>
+            <StyledCheckbox
+              checked={params.showRoofCover || false}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('showRoofCover', e.target.checked)}
+            />
+            <Label>Показать поликарбонатное покрытие</Label>
+          </CheckboxItem>
+        </CheckboxContainer>
       </ControlSection>
 
       {/* Конструкция */}
@@ -209,7 +228,7 @@ const GazeboControls: React.FC<GazeboControlsProps> = ({ params, onChange }) => 
               <Input
                 type="number"
                 value={params.benchCount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('benchCount', parseInt(e.target.value))}
+                onChange={handleRequiredInt('benchCount', 1, 8)}
                 min="1"
                 max="8"
                 step="1"
@@ -260,7 +279,7 @@ const GazeboControls: React.FC<GazeboControlsProps> = ({ params, onChange }) => 
               <Input
                 type="number"
                 value={params.tableCount ?? 1}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange('tableCount', parseInt(e.target.value))}
+                onChange={handleRequiredInt('tableCount', 1, 6)}
                 min="1"
                 max="6"
                 step="1"
