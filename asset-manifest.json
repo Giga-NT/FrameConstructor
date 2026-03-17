@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/FrameConstructor/static/css/main.e8d7230b.css",
+    "main.js": "/FrameConstructor/static/js/main.8d8100bf.js",
+    "static/js/115.2d56877a.chunk.js": "/FrameConstructor/static/js/115.2d56877a.chunk.js",
+    "static/media/gips.png": "/FrameConstructor/static/media/gips.a95c27412c95b85cdc3f.png",
+    "static/media/gazebo.jpg": "/FrameConstructor/static/media/gazebo.22a4309660c7bdf583e7.jpg",
+    "static/media/work1.jpg": "/FrameConstructor/static/media/work1.f670821918cb3a58a9cd.jpg",
+    "static/media/work3.jpg": "/FrameConstructor/static/media/work3.878378ac0d40eceb03d2.jpg",
+    "static/media/canopy.jpeg": "/FrameConstructor/static/media/canopy.e51681368142c848a8eb.jpeg",
+    "static/media/greenhouse.jpeg": "/FrameConstructor/static/media/greenhouse.3a2ea343251b7f33d3fd.jpeg",
+    "static/media/work2.jpg": "/FrameConstructor/static/media/work2.28622a48ec9d0d2809e4.jpg",
+    "index.html": "/FrameConstructor/index.html",
+    "static/media/user.svg": "/FrameConstructor/static/media/user.4390d3dce3f9fd0aefbf9baee274cfd1.svg",
+    "static/media/check.svg": "/FrameConstructor/static/media/check.bb4ab65d0426b33484996de0672aa62d.svg",
+    "main.e8d7230b.css.map": "/FrameConstructor/static/css/main.e8d7230b.css.map",
+    "main.8d8100bf.js.map": "/FrameConstructor/static/js/main.8d8100bf.js.map",
+    "115.2d56877a.chunk.js.map": "/FrameConstructor/static/js/115.2d56877a.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e8d7230b.css",
+    "static/js/main.8d8100bf.js"
+  ]
+}
