@@ -49,6 +49,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "dist": "npm run build && electron-builder --win portable",
     "package": "npm run build && electron-builder --win nsis"
   },
@@ -78,9 +80,11 @@
     "@types/uuid": "^10.0.0",
     "electron": "^40.4.0",
     "electron-builder": "^26.7.0",
+    "gh-pages": "^6.3.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
-    "react-app-rewired": "^2.2.1"
+    "react-app-rewired": "^2.2.1",
+    "workbox-webpack-plugin": "^7.4.0"
   },
   "build": {
     "appId": "com.yourcompany.frameconstructor",
@@ -99,5 +103,6 @@
       ],
       "icon": "public/logo192.png"
     }
-  }
+  },
+  "homepage": "./"
 }

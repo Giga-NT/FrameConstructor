@@ -1,51 +1,49 @@
-<<<<<<< HEAD
-# Getting Started with Create React App
+# 🏗️ Giga FrameConstructor
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Профессиональный 3D-конфигуратор для производителей металлоконструкций**
 
-## Available Scripts
+[![GitHub stars](https://img.shields.io/github/stars/Giga-NT/FrameConstructor)](https://github.com/Giga-NT/FrameConstructor/stargazers)
+[![GitHub license](https://img.shields.io/github/license/Giga-NT/FrameConstructor)](https://github.com/Giga-NT/FrameConstructor/blob/main/LICENSE)
+[![Demo](https://img.shields.io/badge/demo-live-green)](https://giga-nt.github.io/FrameConstructor)
 
-In the project directory, you can run:
+## 🎯 О проекте
 
-### `npm start`
+**Giga FrameConstructor** — это интерактивный 3D-конфигуратор для быстрого расчета и визуализации:
+- 🏠 **Навесы** для автомобилей (6+ типов конструкций)
+- 🌱 **Теплицы** промышленные и дачные
+- 🏡 **Беседки** с зоной барбекю
+- 🏭 **Складские помещения** (в разработке)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## ✨ Возможности
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Для производителей
+- ✅ Мгновенный расчет стоимости материалов
+- ✅ Автоматическая генерация спецификации
+- ✅ Экспорт в PDF для коммерческих предложений
+- ✅ Сохранение проектов в личном кабинете
+- ✅ 3D-визуализация для показа клиентам
 
-### `npm test`
+### Для покупателей
+- 🎨 Визуальный выбор размеров и материалов
+- 📐 Изменение параметров в реальном времени
+- 💰 Прозрачный расчет бюджета
+- 📱 Работает на телефонах и планшетах
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🖼️ Демо
 
-### `npm run build`
+### Навесы
+![Навес](https://github.com/user-attachments/assets/d4bcb327-8258-412a-9625-d15476c1de22)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Теплицы
+*(добавьте скриншот теплицы)*
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Беседки
+*(добавьте скриншот беседки)*
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🚀 Быстрый старт
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-=======
-# FrameConstructor
-Для себя делаю
->>>>>>> 93d434fcd73e22391b49045b8ee320f775a85bfe
+```bash
+git clone https://github.com/Giga-NT/FrameConstructor.git
+cd FrameConstructor
+npm install
+npm start
