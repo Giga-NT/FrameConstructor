@@ -1,6 +1,10 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { GazeboParams } from '../../types/gazeboTypes';
+import {
+  calculatePillarCount,
+  createPillarMaterial,
+} from '../../utils/gazeboUtils';
 
 const GazeboWalls: React.FC<{ params: GazeboParams }> = ({ params }) => {
   const {
@@ -15,10 +19,10 @@ const GazeboWalls: React.FC<{ params: GazeboParams }> = ({ params }) => {
     pillarBendDirection = 'outward',
   } = params;
 
-  // Вычисляем количество стоек на основе шага (минимум 2 на стену)
-  const pillarCount = useMemo(() => {
-    return Math.max(2, Math.ceil(length / pillarSpacing) + 1);
-  }, [length, pillarSpacing]);
+  const pillarCount = useMemo(
+    () => calculatePillarCount(length, pillarSpacing),
+    [length, pillarSpacing]
+  );
 
   const pillarDim = useMemo(() => {
     switch (pillarSize) {
@@ -30,7 +34,7 @@ const GazeboWalls: React.FC<{ params: GazeboParams }> = ({ params }) => {
   }, [pillarSize]);
 
   const material = useMemo(
-    () => new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.1 }),
+    () => createPillarMaterial(color, 0.7, 0.1),
     [color]
   );
 

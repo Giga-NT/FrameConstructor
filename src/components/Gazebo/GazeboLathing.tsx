@@ -2,62 +2,23 @@ import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { GazeboParams } from '../../types/gazeboTypes';
 import Beam from '../Beams/Beam';
+import {
+  getTubeDimensions,
+  calculateTrussPositions,
+  getArchPoints3D,
+  calculateTotalDimensions,
+} from '../../utils/gazeboUtils';
 
 const GazeboLathing: React.FC<{ params: GazeboParams }> = ({ params }) => {
-  const getTubeDimensions = (size: string) => {
-    const dims: Record<string, { width: number; thickness: number }> = {
-      '40x20': { width: 0.04, thickness: 0.02 },
-      '40x40': { width: 0.04, thickness: 0.04 },
-      '50x50': { width: 0.05, thickness: 0.05 },
-      '60x60': { width: 0.06, thickness: 0.06 },
-    };
-    return dims[size] || { width: 0.04, thickness: 0.02 };
-  };
+  const { totalWidth } = calculateTotalDimensions(params.width, params.length, params.overhang);
 
-  const trussPositions = useMemo(() => {
-    const positions: number[] = [];
-    const step = params.length / (params.trussCount - 1);
-    for (let i = 0; i < params.trussCount; i++) {
-      positions.push(-params.length / 2 + i * step);
-    }
-    return positions;
-  }, [params.length, params.trussCount]);
+  const trussPositions = useMemo(
+    () => calculateTrussPositions(params.length, params.trussCount),
+    [params.length, params.trussCount]
+  );
 
   const getRoofPoints = (zPos: number): THREE.Vector3[] => {
-    const roofWidth = params.width + params.overhang * 2;
-    const points: THREE.Vector3[] = [];
-
-    switch (params.roofType) {
-      case 'gable':
-        points.push(
-          new THREE.Vector3(-roofWidth / 2, params.height, zPos),
-          new THREE.Vector3(0, params.height + params.roofHeight, zPos),
-          new THREE.Vector3(roofWidth / 2, params.height, zPos)
-        );
-        break;
-      case 'arched': {
-        const segments = 12;
-        for (let i = 0; i <= segments; i++) {
-          const angle = (i / segments) * Math.PI;
-          const x = -roofWidth / 2 + (roofWidth * i) / segments;
-          const y = params.height + params.roofHeight * Math.sin(angle);
-          points.push(new THREE.Vector3(x, y, zPos));
-        }
-        break;
-      }
-      case 'single':
-        points.push(
-          new THREE.Vector3(-roofWidth / 2, params.height + 0.05, zPos),
-          new THREE.Vector3(roofWidth / 2, params.height + params.roofHeight + 0.05, zPos)
-        );
-        break;
-      default:
-        points.push(
-          new THREE.Vector3(-roofWidth / 2, params.height + 0.05, zPos),
-          new THREE.Vector3(roofWidth / 2, params.height + 0.05, zPos)
-        );
-    }
-    return points;
+    return getArchPoints3D(params.roofType, totalWidth, params.roofHeight, zPos, params.height, 12);
   };
 
   const lathingElements = useMemo(() => {

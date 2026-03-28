@@ -71,6 +71,7 @@
     ]
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "@types/aos": "^3.0.7",
     "@types/react": "^19.1.8",
     "@types/styled-components": "^5.1.34",
